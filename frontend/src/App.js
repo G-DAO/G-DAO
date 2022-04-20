@@ -2,6 +2,8 @@ import logo from './logo.svg';
 import './App.css';
 import Candidate from './components/Candidate';
 import Landing from './components/Landing';
+import Navbar from './components/navbar';
+
 
 function App() {
   const student = {
@@ -22,10 +24,12 @@ function App() {
 
   return (
     <div className="App">
+      <Navbar/>
       
       <header className="App-header">
       <Landing handleSignIn= {handleSignIn} />
       <Candidate student = {student} handleVote = {handleVote} />
+    
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
