@@ -12,6 +12,22 @@ code {
     monospace;
 }
 
+footer {
+  margin-top: 5rem;
+  background-color: rgb(10, 8, 8);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5rem;
+}
+
+footer a {
+  color:goldenrod;
+}
+
+
+
 .layout {
   width: 65%;
   margin:auto;
@@ -243,6 +259,7 @@ code {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   width: 50%;
 }
 
@@ -255,6 +272,7 @@ code {
   cursor: pointer;
   color: white;
   background-color: black;
+  margin-top: 0 ;
 
 }
 
@@ -305,4 +323,14 @@ code {
   border: 0;
 }
 
-
+.account-type {
+  width: 70%;
+  height: 3.5rem;
+  border-radius: 5px;
+  border: 1px solid silver;
+  margin-top: 2rem;
+  font-size: medium;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

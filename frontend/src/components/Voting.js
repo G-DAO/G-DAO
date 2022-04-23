@@ -7,6 +7,7 @@ import Candidate from './Candidate';
 const Voting = ({post, candidates, handleVote, isResultView, isAdminView, resultsCompiled}) => {
     const [showContestants, setShowContestants] = useState(true);
     const [hasVoted, setHasVoted] = useState(false);
+    let maxVotes = candidates[0].votesCount;
 
     // check that category has been voted for
     const checkVoted = (name, checker) => {
@@ -31,7 +32,7 @@ const Voting = ({post, candidates, handleVote, isResultView, isAdminView, result
                 {candidates.map((candidate, index) => {
                     return (<div key = {index}>
                         < Candidate student = {candidate} handleVote = {checkVoted} number = {index + 1} votedforCategory= {hasVoted} isResultView= {isResultView} 
-                        isWinner = {resultsCompiled && index===0}
+                        isWinner = {resultsCompiled && candidate.votesCount===maxVotes}
                         isAdminView = {isAdminView} />
                     </div>)
                     

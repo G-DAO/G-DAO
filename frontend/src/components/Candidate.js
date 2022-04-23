@@ -1,17 +1,17 @@
 import { useState } from 'react';
 
-const Candidate = ({student, handleVote, number, votedforCategory, isResultView, isWinner, isAdminView}) => {
+const Candidate = ({student, handleVote, votedforCategory, isResultView, isWinner, isAdminView}) => {
     const [isVoted, setIsVoted] = useState(false);
 
     const setVote = () => {
-        isVoted ? handleVote(student.id, false) : handleVote(student.id, true);
+        isVoted ? handleVote(student.ID, false) : handleVote(student.ID, true);
         if (votedforCategory) return;
         setIsVoted(!isVoted);
     }
 
     return (
         <div className= "candidate-pane">
-            <h2>Candidate {number}</h2>
+            <h2>Candidate {student.ID}</h2>
             <div className= "candidate-img">
                 <img src= {`https://ipfs.infura.io/ipfs/${student.CID}`} alt= {student.name}>
                 </img>

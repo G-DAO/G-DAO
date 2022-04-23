@@ -7,10 +7,10 @@ import { useState, useEffect } from 'react';
 import Web3 from 'web3/dist/web3.min.js';
 import { CONTRACT_ABI } from './constants';
 import { contactAddress } from './contractAddress';
-
+import Footer from './components/Footer';
 
 function App() {
-  const [electionPhase, setElectionPhase] = useState(1);
+  const [electionPhase, setElectionPhase] = useState(2);
   const [currentPage, setCurrentPage] = useState('login');
   const [accountType, setAccountType] = useState('Chairman');
   const [contractAvailability, setContractAvailability] = useState(true);
@@ -61,7 +61,9 @@ function App() {
 
   const getElectionPhase = async (contract) => {
     let p = await contract.methods.getElectionPhase().call()
-    return p;
+    console.log(p)
+    setElectionPhase(Number(p));
+    
   }
 
   const handleContractAvailability = async (contract) => {
@@ -71,7 +73,7 @@ function App() {
 
   const getAccountType = async (contract_, address) => {
     console.log(contract_)
-    let p = await contract_.methods.login().call({from : address})
+    let p = await contract_.methods.login(address).call()
     return p;
   }
 
@@ -84,7 +86,7 @@ function App() {
       let p = {}
       p.ID = ele.returnValues.ID
       p.name = ele.returnValues.name
-      p.ipfs = ele.returnValues.ipfs
+      p.CID = ele.returnValues.ipfs
       p.position = ele.returnValues.position
 
       if (!res.includes(ele.returnValues.position)) {
@@ -112,9 +114,9 @@ function App() {
       let p = {}
       p.ID = ele.returnValues.Candid.ID
       p.name = ele.returnValues.Candid.name
-      p.ipfs = ele.returnValues.Candid.ipfs
+      p.CID = ele.returnValues.Candid.ipfs
       p.position = ele.returnValues.Candid.position
-      p.votesCount = ele.reurnValues.votes
+      p.votesCount = Number(ele.returnValues.votes)
 
       result_.push(p)
       
@@ -123,6 +125,17 @@ function App() {
     setCandidates(result_)
     console.log(result_)
 
+  }
+
+  const updateCandidates = (id, name_, post, ipfs) => {
+    const data = {
+      ID: id,
+      name: name_,
+      CID: ipfs,
+      position: post
+    }
+
+    setCandidates([...candidates, data])
   }
 
   const handleSignIn = async (contract_) => {
@@ -139,7 +152,7 @@ function App() {
           setCurrentPage('home')
 
           getAccountType(contract_, accounts[0]).then(p => {
-            if (!['student', 'Chairman', 'teacher'].includes(p)) {
+            if (!['Student', 'Chairman', 'Teacher', 'Director'].includes(p)) {
               alert('You have signed in with an unauthorized account. Contact the Chairman or any of the teachers')
               setCurrentPage('login')
               setLoaded(false)
@@ -161,8 +174,8 @@ function App() {
       window.ethereum.on('accountsChanged', function (accounts) {
         setLoaded(true)
         setSelectedAccount(accounts[0]);
-        getAccountType(accounts[0]).then(p => {
-          if (!['student', 'Chairman', 'teacher'].includes(p)) {
+        getAccountType(contract_, accounts[0]).then(p => {
+          if (!['Student', 'Chairman', 'teacher'].includes(p)) {
             alert('You tried signing in with an unauthorized account. Contact the Chairman or any of the teachers')
             setCurrentPage('login')
             return
@@ -200,12 +213,10 @@ function App() {
       setContractAvailability(p)});
     
 
-    getElectionPhase(contract_).then(p => {
-      setElectionPhase(p)
-    })
-
-    handleGetCandidates(contract_)
     
+    if (electionPhase !== 3) {
+      handleGetCandidates(contract_)
+    }
 
 
   }, [])
@@ -215,6 +226,8 @@ function App() {
     if (electionPhase === 3) {
       handleGetResults(contract)
     }
+
+    getElectionPhase(contract)
 
   }, [electionPhase, contract])
 
@@ -249,7 +262,7 @@ function App() {
     <p>The resource you seek is currently not available. Check back another time.</p>
   </div>)
 
-  console.log(currentPage)
+  console.log(electionPhase)
 
   return (
     <div className="App">
@@ -261,18 +274,19 @@ function App() {
           <h3>Welcome, {accountType}</h3>
         <hr/>
         {currentPage === 'home' && (electionPhase === 1 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} address= {selectedAccount} /> :
-        (electionPhase ===3 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} isResultView = {true} resultsCompiled = {true}/> : 
+        (electionPhase === 3 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} isResultView = {true} resultsCompiled = {true}/> : 
         <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-          {electionPhase === 2 ? <p> Voting session has been concluded</p> : <p> Voting has not commenced yet</p>}
+          {electionPhase === 2 ? <p> Voting session has been concluded</p> : <p> {accountType === 'Chairman' ? 'You have not set voting to commence' : 'Voting has not commenced'}</p>}
           <p> {'   '}</p>
-          {electionPhase === 2 ? <p> Come back later to view results after the have been published</p> : <p> You would be notified when it commences</p>}
+          {electionPhase === 2 ? <p> Come back later to view results after the have been published</p> : <p> {accountType === 'Chairman' ? 'Start Vote from Admin Page' : 'You will be notified when it commences'}</p>}
           </div>))}
-          </> : fallback}
+          </> : (currentPage !== 'admin' && fallback)}
 
         {currentPage === 'admin' && <AdminPage startVote = {startVote} endVote = {endVote} accountType = {accountType} address = {selectedAccount}
         contract= {contract} enableContract= {enableContract} disableContract= {disableContract} contractLive = {contractAvailability} votingOccuring= {electionPhase < 2}
-        candidates= {candidates} posts = {posts}/>}
+        candidates= {candidates} posts = {posts} sendCandidatesData= {updateCandidates}/>}
       </div>
+      < Footer />
       </>) : loadPage}
       
     </div>

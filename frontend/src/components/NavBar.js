@@ -19,7 +19,7 @@ const NavBar = ({address, accountType, toggleHome, disconnectAccount}) => {
                     <button className = {showingHome ? 'nav-select' : 'nav-unselect'} onClick = {() => setHomeToggle('home')}>
                         Home
                     </button>
-                    {accountType !== 'student' && <button className = {!showingHome ? 'nav-select' : 'nav-unselect'} onClick = {() => setHomeToggle('admin')}>
+                    {accountType !== 'Student' && <button className = {!showingHome ? 'nav-select' : 'nav-unselect'} onClick = {() => setHomeToggle('admin')}>
                         Admin
                     </button>}
 
