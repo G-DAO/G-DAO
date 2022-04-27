@@ -284,7 +284,7 @@ function App() {
 
         {currentPage === 'admin' && <AdminPage startVote = {startVote} endVote = {endVote} accountType = {accountType} address = {selectedAccount}
         contract= {contract} enableContract= {enableContract} disableContract= {disableContract} contractLive = {contractAvailability} votingOccuring= {electionPhase < 2}
-        candidates= {candidates} posts = {posts} sendCandidatesData= {updateCandidates}/>}
+        candidates= {candidates} posts = {posts} sendCandidatesData= {updateCandidates} setPage = {(page) => setCurrentPage(page)}/>}
       </div>
       < Footer />
       </>) : loadPage}

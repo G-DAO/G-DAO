@@ -3,9 +3,10 @@ import * as ipfsClient from 'ipfs-http-client';
 import VotingPage from './VotingPage';
 
 
-const AdminPage = ({contract, startVote, endVote, accountType, address, enableContract, disableContract, contractLive, votingOccuring, candidates, posts, sendCandidatesData}) => {
+const AdminPage = ({contract, startVote, endVote, accountType, address, enableContract, disableContract, contractLive, votingOccuring, candidates, posts, sendCandidatesData, setPage}) => {
 
     const [newAdmin, setNewAdmin] = useState('')
+    const [newChairman, setNewChairman] = useState('')
     const [candidateName, setCandidateName] = useState('')
     const [position, setPosition] = useState('')
     const [picture, setPicture] = useState(null)
@@ -36,6 +37,27 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
     const handleAddAdmin = () => {
         console.log(newAdmin);
         setNewAdmin('');
+    }
+
+    const changeChairman = async () => {
+        try {
+            const res = await contract.methods.setChairman(newChairman).send({from: address})
+            alert("Chairman changed. You would have to log in again")
+            setPage('login')
+        } 
+        catch (error) {
+            alert(error);
+        }
+    }
+
+    const refreshContract = async () => {
+        try {
+            const res = await contract.methods.clearData().send({from: address})
+            alert("Contract Data refreshed")
+        } 
+        catch (error) {
+            alert(error);
+        } 
     }
 
     const getType = async () => {
@@ -110,7 +132,7 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         return;
 		}
 		try {
-            let id_ = lastCandidateID;
+            let id_ = lastCandidateID + 1;
 			const res = await client.add(picture, {
 				progress: (prog) => console.log(`received: ${prog}`)
 			});
@@ -125,7 +147,7 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
             setCandidateName('')
             setPosition('')
             setPicture(null)
-
+            setLastCandidateID(id_)
         } 
         catch (error) {
 			alert(error);
@@ -166,7 +188,7 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
             <div className= "account-type" >{accountType_}</div>
             <hr/>
 
-            {accountType === 'Chairman' && <>
+            {['Chairman'].includes(accountType) && <>
             <h3>Add Candidate</h3>
             <div className= "interest-form">
                         <label htmlFor="candidateName">  Full Name </label>
@@ -194,7 +216,7 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
             {!contractLive && <p>Contract is not enabled at the moment. Please enable contract first or contact Chairman</p>}
 
 
-            {accountType === 'Chairman' && <>
+            {['Chairman'].includes(accountType) && <>
             <h3>Contract Availability</h3>
             <div className= "start-and-end-vote">
                 <button className= "start-vote" onClick= {enableContract}>
@@ -205,6 +227,18 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
                 </button>
             </div>
             <hr />
+
+            <h3> Refresh Contract </h3>
+            <button onClick = {refreshContract}>Refresh Contract Data</button>
+            <hr />
+
+            <h3>
+                Change Chairman
+            </h3>
+            <div className= "start-and-end-vote">
+                <input type= 'text' placeholder= 'Enter Address' value = {newChairman} onChange= {(e) => setNewChairman(e.target.value)} />
+                <button onClick = {changeChairman}> Hand Over</button>
+            </div>
             </>}
             </>}
 

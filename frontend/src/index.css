@@ -41,10 +41,25 @@ footer a {
   color: black;
 }
 
+.layout p {
+  font-size: medium;
+  margin-top: 5rem;
+}
+
 .landing-page {
-  width: 65%;
+  width: 90%;
   margin:auto;
   background-color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap-reverse;
+  align-items: center;
+  justify-content: space-evenly;
+  color: black;
+}
+
+.landing-page-detail {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -82,7 +97,7 @@ footer a {
   border-radius: 4px;
 }
 
-.candidate-pane h2 {
+.candidate-pane h2 h3 {
   margin: 0;
 }
 
@@ -93,8 +108,9 @@ footer a {
 }
 
 .candidate-pane img {
-  width: 18rem;
-  height: 18rem
+  width: 10rem;
+  height: 10rem;
+  border-radius: 10%;
 }
 
 .candidate-pane button {
@@ -189,6 +205,16 @@ footer a {
   padding: 5px 0;
 
 }
+
+.nav-bar-landing {
+  background-color: transparent;
+  color: black;
+  width: 100%;
+  position: static;
+  padding: 5px 0;
+
+}
+
 
 .nav-bar-main {
   width: 70%;
