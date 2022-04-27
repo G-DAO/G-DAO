@@ -49,7 +49,7 @@ footer a {
 .landing-page {
   width: 90%;
   margin:auto;
-  background-color: white;
+  background-color: transparent;
   min-height: 100vh;
   display: flex;
   flex-direction: row;
@@ -339,6 +339,17 @@ footer a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: midnightblue;
+  color: white;
+
+}
+
+.results-summary-box h3 {
+  font-size: medium;
+}
+
+.results-summary-box h1 {
+  font-size: large;
 }
 
 .side-button {
