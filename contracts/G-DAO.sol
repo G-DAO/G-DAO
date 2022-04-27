@@ -46,17 +46,17 @@ contract Elect is Ownable {
   /// @notice Time to stop a function
   uint256 Dead;
 
-  /// @notice Address of the Chairman of the organisation.
-  address Chairman;
-
-  /// @notice State for a function
-  bool Start;
-
   /// @notice The number of candidates. Initialised as 0
   uint256 count = 0;
 
   /// @notice The phase of election, initialised as 0
   uint256 private electionPhase = 0;
+
+  /// @notice Address of the Chairman of the organisation.
+  address Chairman;
+
+  /// @notice State for a function
+  bool Start;
 
   /// @notice states the details of a candidate
   struct Candid
@@ -70,10 +70,10 @@ contract Elect is Ownable {
   /**
    * @notice An event thats emitted to show the result of the election
    * @dev the Candid parameter will be a struct representing a Contestant
-   * @param Candid candidate contesting
+   * @param candid candidate contesting
    * @param votes total number of votes
    */
-  event result(Candid Candid, uint256 votes);
+  event result(Candid candid, uint256 votes);
 
   /// @notice An event thats emitted to show the details of the candidates 
   event candidates(uint256 ID, string name, string position, string ipfs);
@@ -124,7 +124,7 @@ contract Elect is Ownable {
   }
 
    /// @notice this functions clears the contents of the previously performed election so it can be reused
-  function clearData()public 
+  function clearData()external 
   {
     require(msg.sender == Chairman,"no access");
     require(Start==false,"voting must end first");
@@ -209,9 +209,10 @@ contract Elect is Ownable {
    * @param position The position the candidate is vying for
    * @param link The ipfs link containing the image of the candidate
    */
-  function addCandidate(string memory candidate,string memory position, string memory link)public controlAccess
+  function addCandidate(address addr, string memory candidate,string memory position, string memory link)public controlAccess
   {
     require(msg.sender==Chairman, "must be Chairman");
+    require(Holders[addr]==true, "candidate not a stake holder");
     uint256 Count=count + 1;
     count++;
     candidateList.push(candidate);
