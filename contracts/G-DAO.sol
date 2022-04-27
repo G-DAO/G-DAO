@@ -12,9 +12,6 @@ contract Elect is Ownable {
     Holders[msg.sender] = true;
     Dead = block.timestamp;
   }
-  
-  /// @notice A list of candidates for the election
-  string[] public candidateList;
     
   /// @notice A record for validity of candidate
   mapping(uint256 => bool) Candidate;
@@ -36,27 +33,24 @@ contract Elect is Ownable {
 
   /// @notice  An official record of Contestant information
   mapping (uint256 => Candid) Contestant;
-  
-  ///@notice mapping for other stake holders
-  mapping (address => bool) private otherStakes;
 
   ///@notice mapping of students
-  mapping (address => bool) Students;
-
-  /// @notice Time to stop a function
-  uint256 Dead;
-
-  /// @notice The number of candidates. Initialised as 0
-  uint256 count = 0;
-
-  /// @notice The phase of election, initialised as 0
-  uint256 private electionPhase = 0;
+  mapping (address => bool) Student;
 
   /// @notice Address of the Chairman of the organisation.
   address Chairman;
 
-  /// @notice State for a function
-  bool Start;
+  /// @notice The phase of election, initialised as 0
+  uint8 private electionPhase = 0;
+
+  /// @notice The number of candidates. Initialised as 0
+  uint256 count = 0;
+
+  /// @notice Time to stop a function
+  uint256 Dead;
+
+  /// @notice A list of candidates for the election
+  string[] public candidateList;
 
   /// @notice states the details of a candidate
   struct Candid
@@ -70,10 +64,10 @@ contract Elect is Ownable {
   /**
    * @notice An event thats emitted to show the result of the election
    * @dev the Candid parameter will be a struct representing a Contestant
-   * @param candid candidate contesting
+   * @param Candid candidate contesting
    * @param votes total number of votes
    */
-  event result(Candid candid, uint256 votes);
+  event result(Candid Candid, uint256 votes);
 
   /// @notice An event thats emitted to show the details of the candidates 
   event candidates(uint256 ID, string name, string position, string ipfs);
@@ -90,17 +84,10 @@ contract Elect is Ownable {
   /// @notice Modifier to Start the voting process
   modifier startvoting
   {
-    require(Start==true,"Its not yet time to vote");
+    require(electionPhase == 1,"Its not yet time to vote");
     _;
   }
 
-  //@notice mpdifier to check if other stakeholder
-  modifier otherStake
-  {
-    require(otherStakes[msg.sender]==true,"you dont have access");
-    _;
-  }
-  
   /// @notice Moderator to control access to the smart contract
   modifier controlAccess{
     require(block.timestamp >= Dead,"contract is disabled");
@@ -124,10 +111,10 @@ contract Elect is Ownable {
   }
 
    /// @notice this functions clears the contents of the previously performed election so it can be reused
-  function clearData()external 
+  function clearData()public 
   {
     require(msg.sender == Chairman,"no access");
-    require(Start==false,"voting must end first");
+    require(electionPhase == 2,"voting must end first");
     for(uint256 i = 1; i <= count; i++)
     {
       delete Candidate[i];
@@ -151,7 +138,6 @@ contract Elect is Ownable {
   function beginVote()public controlAccess
   {
     require(msg.sender== Chairman,"you're not the Chairman");
-    Start = true;
     electionPhase = 1;
   }
 
@@ -160,8 +146,8 @@ contract Elect is Ownable {
    */
   function endVote()public controlAccess
   {
+    require(electionPhase == 1, "You must first begin vote");
     require(msg.sender==Chairman,"you're not the Chairman ");
-    Start = false;
     electionPhase = 2;
   }
 
@@ -172,7 +158,6 @@ contract Elect is Ownable {
   function setChairman(address _chairman) public onlyOwner {
     Chairman = _chairman;
     Holders[_chairman]=true;
-    otherStakes[_chairman]=true;
   }
   
   /**
@@ -186,15 +171,13 @@ contract Elect is Ownable {
       require(addresses.length == accountTypes.length, "the roles and addresses provided differ");     
       for (uint i = 0; i < addresses.length; i++) {
           if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('student'))) {
-              Students[addresses[i]] = true;
+              Student[addresses[i]] = true;
               Holders[addresses[i]] = true;
           } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Teacher'))) {
                Teacher[addresses[i]]=true;
-               otherStakes[addresses[i]]=true;
                Holders[addresses[i]] = true;
           } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Director'))) {
                  Teacher[addresses[i]]=true;
-                 otherStakes[addresses[i]]=true;
                  Holders[addresses[i]] = true;
           } else {
               continue;
@@ -209,10 +192,9 @@ contract Elect is Ownable {
    * @param position The position the candidate is vying for
    * @param link The ipfs link containing the image of the candidate
    */
-  function addCandidate(address addr, string memory candidate,string memory position, string memory link)public controlAccess
+  function addCandidate(string memory candidate,string memory position, string memory link)public controlAccess
   {
     require(msg.sender==Chairman, "must be Chairman");
-    require(Holders[addr]==true, "candidate not a stake holder");
     uint256 Count=count + 1;
     count++;
     candidateList.push(candidate);
@@ -228,7 +210,7 @@ contract Elect is Ownable {
    * @notice this function collects the candidates name, checks if it exists then counts a vote for said candidate
    * @param candidate The name of the candidate
   */
-  function voteCandidate(uint256[] calldata candidate) external controlAccess stakeholder startvoting returns(bytes32){
+  function voteCandidate(uint256[] calldata candidate) external controlAccess startvoting returns(bytes32){
 
     require(Voted[msg.sender]==false,"You cant vote twice");
 
@@ -280,15 +262,13 @@ contract Elect is Ownable {
     return false;
   }
    
-
-
-   
   /**
-   * @notice function allows otherstakeholders to make the results of the election visible to all students
+   * @notice function allows Stakeholders except students to make result visible to all
    */
-  function publicResults()public controlAccess otherStake
+  function publicResults()public controlAccess
   {
-    require(Start == false,"voting has to end first");
+    require(Student[msg.sender] != true);
+    require(electionPhase == 2,"voting has to end first");
     for(uint256 i=1; i<=count; i++)
     {
       emit result (Contestant[i], votesReceived[i]);
@@ -322,7 +302,7 @@ contract Elect is Ownable {
       return "Director";
     }
    ///@notice students login
-    else if(Students[user]==true)
+    else if(Student[user]==true)
     {
       return "Student";
     }
