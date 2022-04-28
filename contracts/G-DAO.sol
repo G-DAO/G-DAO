@@ -64,10 +64,10 @@ contract Elect is Ownable {
   /**
    * @notice An event thats emitted to show the result of the election
    * @dev the Candid parameter will be a struct representing a Contestant
-   * @param Candid candidate contesting
+   * @param candid candidate contesting
    * @param votes total number of votes
    */
-  event result(Candid Candid, uint256 votes);
+  event result(Candid candid, uint256 votes);
 
   /// @notice An event thats emitted to show the details of the candidates 
   event candidates(uint256 ID, string name, string position, string ipfs);
@@ -189,9 +189,10 @@ contract Elect is Ownable {
    * @param position The position the candidate is vying for
    * @param link The ipfs link containing the image of the candidate
    */
-  function addCandidate(string memory candidate,string memory position, string memory link)public controlAccess
+  function addCandidate(address addr, string memory candidate,string memory position, string memory link)public controlAccess
   {
     require(msg.sender==Chairman, "must be Chairman");
+     require(Holders[addr]==true, "candidate not a stake holder");
     uint256 Count=count + 1;
     count++;
     candidateList.push(candidate);

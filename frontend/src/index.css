@@ -12,6 +12,22 @@ code {
     monospace;
 }
 
+footer {
+  margin-top: 5rem;
+  background-color: rgb(10, 8, 8);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5rem;
+}
+
+footer a {
+  color:goldenrod;
+}
+
+
+
 .layout {
   width: 65%;
   margin:auto;
@@ -25,10 +41,25 @@ code {
   color: black;
 }
 
+.layout p {
+  font-size: medium;
+  margin-top: 5rem;
+}
+
 .landing-page {
-  width: 65%;
+  width: 90%;
   margin:auto;
-  background-color: white;
+  background-color: transparent;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap-reverse;
+  align-items: center;
+  justify-content: space-evenly;
+  color: black;
+}
+
+.landing-page-detail {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -66,7 +97,7 @@ code {
   border-radius: 4px;
 }
 
-.candidate-pane h2 {
+.candidate-pane h2 h3 {
   margin: 0;
 }
 
@@ -77,8 +108,9 @@ code {
 }
 
 .candidate-pane img {
-  width: 18rem;
-  height: 18rem
+  width: 10rem;
+  height: 10rem;
+  border-radius: 10%;
 }
 
 .candidate-pane button {
@@ -174,6 +206,16 @@ code {
 
 }
 
+.nav-bar-landing {
+  background-color: transparent;
+  color: black;
+  width: 100%;
+  position: static;
+  padding: 5px 0;
+
+}
+
+
 .nav-bar-main {
   width: 70%;
   margin: auto;
@@ -243,6 +285,7 @@ code {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   width: 50%;
 }
 
@@ -255,6 +298,7 @@ code {
   cursor: pointer;
   color: white;
   background-color: black;
+  margin-top: 0 ;
 
 }
 
@@ -295,6 +339,17 @@ code {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: midnightblue;
+  color: white;
+
+}
+
+.results-summary-box h3 {
+  font-size: medium;
+}
+
+.results-summary-box h1 {
+  font-size: large;
 }
 
 .side-button {
@@ -305,4 +360,14 @@ code {
   border: 0;
 }
 
-
+.account-type {
+  width: 70%;
+  height: 3.5rem;
+  border-radius: 5px;
+  border: 1px solid silver;
+  margin-top: 2rem;
+  font-size: medium;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

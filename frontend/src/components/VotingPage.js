@@ -7,16 +7,24 @@ const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, results
     const [votes, setVotes] = useState([]);
     const [noOfVotes, setNoOfVotes] = useState(0);
 
+
     const setVoters = (name, checker) => {
-        checker ? setVotes([...votes, name]) : setVotes(votes.filter(t => t !== name));
+        checker ? setVotes([...votes, Number(name)]) : setVotes(votes.filter(t => t !== Number(name)));
+        console.log(votes)
     }
 
     const handleSubmitVotes = async () => {
+        if (votes.length < posts.length) {
+            alert('You have not voted all categories.')
+            return;
+        }
         console.log(votes);
 
         try {
-            await contract.methods.voteCandidates(votes).send({from : address})
+            await contract.methods.voteCandidate(votes).send({from : address})
             alert('Votes Sent');
+            
+            setVotes([])
         } 
         catch (error) {
 			alert(error);
@@ -44,10 +52,11 @@ const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, results
             {isResultView && <ResultSummary numOfPosts= {posts.length} amountOfVotes = {noOfVotes} candidPerPost = {Math.round(noOfVotes/posts.length)} />}
 
             {posts.map((post, index) => {
-                let candidates = candidatesByPost.filter(t => t.post === post).sort((a, b) => {
+                let candidates = candidatesByPost.filter(t => t.position === post).sort((a, b) => {
                     if(isResultView) return b.votesCount - a.votesCount;
                     return 0;
                 })
+                console.log(candidates)
                 return (
                     < Voting post = {post} candidates = {candidates} handleVote = {setVoters} isResultView = {isResultView} isAdminView = {isAdminView} resultsCompiled= {resultsCompiled} />
                 )
@@ -64,7 +73,7 @@ const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, results
 AdminPage.defaultProps = {
     isResultView: false,
     isAdminView: false,
-    resultsCompiled: false
+    resultsCompiled: true
 }
 
 export default VotingPage

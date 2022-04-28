@@ -3,12 +3,14 @@ import * as ipfsClient from 'ipfs-http-client';
 import VotingPage from './VotingPage';
 
 
-const AdminPage = ({contract, startVote, endVote, accountType, address, enableContract, disableContract, contractLive, votingOccuring, candidates, posts}) => {
+const AdminPage = ({contract, startVote, endVote, accountType, address, enableContract, disableContract, contractLive, votingOccuring, candidates, posts, sendCandidatesData, setPage}) => {
 
     const [newAdmin, setNewAdmin] = useState('')
+    const [newChairman, setNewChairman] = useState('')
     const [candidateName, setCandidateName] = useState('')
     const [position, setPosition] = useState('')
     const [picture, setPicture] = useState(null)
+    const [lastCandidateID, setLastCandidateID] = useState(candidates.length);
 
     const [viewCandidates, setViewCandidates] = useState(false)
     const [viewResults, setViewResults] = useState(false)
@@ -20,6 +22,9 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
 
 
     const handleStartVote = () => {
+        if (candidates.length === 0) {
+            alert('Voting can not start without candidates')
+        }
         console.log('Started Voting season');
         startVote();
     }
@@ -34,12 +39,32 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         setNewAdmin('');
     }
 
+    const changeChairman = async () => {
+        try {
+            const res = await contract.methods.setChairman(newChairman).send({from: address})
+            alert("Chairman changed. You would have to log in again")
+            setPage('login')
+        } 
+        catch (error) {
+            alert(error);
+        }
+    }
+
+    const refreshContract = async () => {
+        try {
+            const res = await contract.methods.clearData().send({from: address})
+            alert("Contract Data refreshed")
+        } 
+        catch (error) {
+            alert(error);
+        } 
+    }
+
     const getType = async () => {
         if(!newAdmin) {alert('Enter a valid address'); return;}
         try {
-            const res = await contract.methods.getAccountType(newAdmin).call()
+            const res = await contract.methods.login(newAdmin).call()
             setAccountType_(res);
-            setNewAdmin('');
         } 
         catch (error) {
             alert(error);
@@ -54,17 +79,28 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         let roles = [];
         if (file) {
             console.log(file)
-            fileReader.onload = function (event) {
+            fileReader.onload = async function (event) {
                 const csvOutput = event.target.result;
                 let lines = csvOutput.split('\n');
                 for (let i = 0; i < lines.length; i++) {
                     let p = lines[i].split(',');
                     res.push(p[0]);
-                    roles.push(p[1]);
+                    roles.push(p[1].split('\r')[0]);
         
                 }
         
                 console.log({res, roles})
+
+                if (res.length === roles.length && res.length > 0) {
+                    try {
+                        await contract.methods.addStakeholders(res, roles).send({from : address})
+                        alert('Added Stakeholders');	
+                        console.log('Added Candidate')
+                    } 
+                    catch (error) {
+                        alert(error);
+                    } 
+                } else alert("The number of addresses you sent do not match the number of roles. Check your file and try again.")
 
             };
 
@@ -72,27 +108,20 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
             fileReader.readAsText(file);
         }
 
-        if (res.length === roles.length && res.length !== 0) {
-            try {
-                await contract.methods.addStakeholders().send({from : address})
-                alert('Results set to Published');	
-                console.log('Added Candidate')
-            } 
-            catch (error) {
-                alert(error);
-            } 
-        } else alert("The number of addresses you sent do not match the number of roles. Check your file and try again.")
+        
         
     }
 
     const handlePublishResults = async () => {
         try {
-            await contract.methods.publishResults().send({from : address})
+            await contract.methods.publicResults().send({from : address})
             alert('Results set to Published');	
             console.log('Added Candidate')
         } 
         catch (error) {
-			alert(error);
+            const p = {error}
+			alert(p.error.message);
+            console.log(p.error.message);
 		} 
     }
 
@@ -103,6 +132,7 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         return;
 		}
 		try {
+            let id_ = lastCandidateID + 1;
 			const res = await client.add(picture, {
 				progress: (prog) => console.log(`received: ${prog}`)
 			});
@@ -113,24 +143,28 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
 			).send({from : address})
             alert('Candidate Added');	
             console.log('Added Candidate')
+            sendCandidatesData(id_, candidateName, position, res.path);
             setCandidateName('')
             setPosition('')
             setPicture(null)
-
+            setLastCandidateID(id_)
         } 
         catch (error) {
 			alert(error);
-		}           
+		}
+        
+        
     }
+
+    console.log({candidates, posts});
 
 
     return (
         <>
-        {votingOccuring && candidates.length !== 0 && <button onClick= {() => setViewCandidates(!viewCandidates)} 
-        className = "side-button"> {viewCandidates ? 'Back to Admin' : 'View Candidates'}</button>}
-        {!votingOccuring && <button onClick= {() => setViewResults(!viewResults)} className = "side-button"> {viewResults ? 'Back to Admin' : 'View Results'}</button>}
+        {contractLive && (<>{votingOccuring && candidates.length !== 0 && <button onClick= {() => setViewCandidates(!viewCandidates)} 
+        className = "side-button"> {viewCandidates ? 'Back to Admin' : 'View Candidates'}</button>}</>)}
         <div className= "admin-page">
-            {!viewResults && !viewCandidates && <>
+            {!viewCandidates && <>
             {contractLive && <>
             <h3>Voting Adjustment</h3>
             <div className= "start-and-end-vote">
@@ -141,6 +175,8 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
                     End Vote
                 </button>
             </div>
+            <h3>{' '}</h3>
+            <hr/>
 
             <h3>
                 Check Account Type
@@ -150,8 +186,9 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
                 <button onClick = {getType}> Check</button>
             </div>
             <div className= "account-type" >{accountType_}</div>
+            <hr/>
 
-            {accountType === 'Chairman' && <>
+            {['Chairman'].includes(accountType) && <>
             <h3>Add Candidate</h3>
             <div className= "interest-form">
                         <label htmlFor="candidateName">  Full Name </label>
@@ -166,18 +203,20 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
                         {/* <input type="submit" placeholder= "Declare"/> */}
                         <button onClick= {handleAddCandidate}>Submit</button>
                     </div>
+                <hr />
 
 
             <h3> WhiteList Addresses </h3>
             <input type = "file" onChange = {(e) => setFile(e.target.files[0])} />
             <button onClick = {(e) => handleAddStakeholders(e)}>Add Stakeholders</button>
+            <hr />
             </>}
             </>}
 
             {!contractLive && <p>Contract is not enabled at the moment. Please enable contract first or contact Chairman</p>}
 
 
-            {accountType === 'Chairman' && <>
+            {['Chairman'].includes(accountType) && <>
             <h3>Contract Availability</h3>
             <div className= "start-and-end-vote">
                 <button className= "start-vote" onClick= {enableContract}>
@@ -187,13 +226,26 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
                     Disable Contract
                 </button>
             </div>
+            <hr />
+
+            <h3> Refresh Contract </h3>
+            <button onClick = {refreshContract}>Refresh Contract Data</button>
+            <hr />
+
+            <h3>
+                Change Chairman
+            </h3>
+            <div className= "start-and-end-vote">
+                <input type= 'text' placeholder= 'Enter Address' value = {newChairman} onChange= {(e) => setNewChairman(e.target.value)} />
+                <button onClick = {changeChairman}> Hand Over</button>
+            </div>
             </>}
             </>}
 
             {viewCandidates && <VotingPage posts= {posts} candidatesByPost= {candidates} isAdminView= {true}/>}
-            {viewResults && <VotingPage posts= {posts} candidatesByPost= {candidates} isResultView= {true} />}
+            {/* {viewResults && <VotingPage posts= {posts} candidatesByPost= {candidates} isResultView= {true} />} */}
 
-            <button onClick= {handlePublishResults}> Publish Results</button>
+            {!votingOccuring && <button onClick= {handlePublishResults}> Publish Results</button>}
             
         </div>
         </>
