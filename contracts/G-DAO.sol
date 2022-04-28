@@ -72,9 +72,6 @@ contract Elect is Ownable {
   /// @notice An event thats emitted to show the details of the candidates 
   event candidates(uint256 ID, string name, string position, string ipfs);
 
-  /// @notice An event thats emitted to declare the winner
-  event Winner(Candid winner, uint256 votes);
-
   /// @notice This checks that the address is a stakeholder
   modifier stakeholder {
     require(Holders[msg.sender] == true, "You are not a stakeholder");
@@ -111,25 +108,24 @@ contract Elect is Ownable {
   }
 
    /// @notice this functions clears the contents of the previously performed election so it can be reused
-  function clearData()public 
+  function clearData()public
   {
     require(msg.sender == Chairman,"no access");
-    require(electionPhase == 2,"voting must end first");
+   // require(electionPhase == 2, "Vote must end");
     for(uint256 i = 1; i <= count; i++)
     {
       delete Candidate[i];
       delete Contestant[i];
       delete votesReceived[i];
-      delete Contestant[i];
-      delete candidateList[i];
     }
     count=0;
 
     for (uint256 i=0; i<candidateList.length; i++)
     {
       delete candidateList[i];
-    }
-    
+    }      
+    Voted[msg.sender] == false;
+    electionPhase = 0;  
   }
 
   /**
@@ -167,17 +163,18 @@ contract Elect is Ownable {
    * @param addresses The address to be given roles
    * @param accountTypes array of the account type
    */
-   function addStakeholders(address[] calldata addresses, string[] calldata accountTypes) external onlyOwner controlAccess {
+   function addStakeholders(address[] calldata addresses, string[] calldata accountTypes) external controlAccess {
+     require(msg.sender == Chairman || owner() == _msgSender());
       require(addresses.length == accountTypes.length, "the roles and addresses provided differ");     
       for (uint i = 0; i < addresses.length; i++) {
-          if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('student'))) {
+          if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Student'))) {
               Student[addresses[i]] = true;
               Holders[addresses[i]] = true;
           } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Teacher'))) {
                Teacher[addresses[i]]=true;
                Holders[addresses[i]] = true;
           } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Director'))) {
-                 Teacher[addresses[i]]=true;
+                 Director[addresses[i]]=true;
                  Holders[addresses[i]] = true;
           } else {
               continue;
@@ -313,4 +310,6 @@ contract Elect is Ownable {
   {
     return block.timestamp > Dead;
   }
+
 }
+
