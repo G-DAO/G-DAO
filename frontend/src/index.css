@@ -355,6 +355,7 @@ footer a {
 .side-button {
   float: left;
   background-color: transparent;
+  cursor: pointer;
   color: black;
   text-decoration: underline;
   border: 0;
