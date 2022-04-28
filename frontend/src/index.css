@@ -1,15 +1,11 @@
+
+   
+@import url("https://fonts.googleapis.com/css2?family=Lexend+Deca&family=Outfit:wght@300;400;600&display=swap");
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: "Outfit", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
 }
 
 footer {
@@ -69,7 +65,7 @@ footer a {
 }
 
 .button-auth {
-  background-color: rgb(48, 143, 226);
+  background-color: rgb(216, 128, 27);
   color: white;
   cursor: pointer;
   border-radius: 5px;
@@ -88,10 +84,11 @@ footer a {
   padding: 1.25rem;
   min-height: 25rem;
   display: flex;
+  margin-right: 50%;
   flex-direction: column;
   justify-content: center;
   margin: 0.5rem;
-  color: black;
+  color: rgb(32, 28, 28);
   background-color: white;
   border: 0.125rem solid white;
   border-radius: 4px;
@@ -101,20 +98,19 @@ footer a {
   margin: 0;
 }
 
-
 .candidate-pane p {
-  color: grey;
+  color: rgb(128, 128, 128);
   font-size: small;
 }
 
 .candidate-pane img {
   width: 10rem;
   height: 10rem;
-  border-radius: 10%;
+  border-radius: 50%;
 }
 
 .candidate-pane button {
-  background-color: rgb(48, 143, 226);
+  background-color: rgb(216, 115, 20);
   color: white;
   cursor: pointer;
   border-radius: 5px;
@@ -129,12 +125,12 @@ footer a {
 }
 
 .voting-bar {
-  background-color: gray;
+  background-color: rgb(229, 241, 247);
   width: 80%;
   min-height: 2rem;
   padding: 1rem;
-  margin: 2rem auto;
-  border-radius: 5px;
+  margin: 1.5rem auto;
+  border-radius: 20px;
 }
 
 .voting-bar-header {
@@ -198,7 +194,7 @@ footer a {
 }
 
 .nav-bar {
-  background-color: rgb(46, 46, 248);
+  background-color: rgb(88, 199, 226);
   color: white;
   width: 100%;
   position: static;
@@ -225,7 +221,11 @@ footer a {
   justify-content: space-between;
 
 }
-
+.nav-bar-main .nab{
+  color: rgb(20, 84, 221);
+  text-decoration: none;
+  font-size: 30px;
+}
 .nav-buttons {
   width: 40%;
   display: flex;
@@ -253,7 +253,7 @@ footer a {
 }
 
 .sign-out {
-  background-color: red;
+  background-color: rgb(243, 139, 20);
   color: white;
   font-size: 15px;
 }
@@ -277,7 +277,7 @@ footer a {
   font-size: 15px;
   cursor: pointer;
   color: white;
-  background-color: red;
+  background-color: rgb(243, 139, 20);
   margin-top: 1rem;
 }
 
@@ -307,7 +307,7 @@ footer a {
 }
 
 .start-vote {
-  background-color: green !important;
+  background-color: rgb(41, 94, 67) !important;
 }
 
 .end-vote {
@@ -356,7 +356,7 @@ footer a {
   float: left;
   background-color: transparent;
   cursor: pointer;
-  color: black;
+  color: rgb(1, 10, 4);
   text-decoration: underline;
   border: 0;
 }
