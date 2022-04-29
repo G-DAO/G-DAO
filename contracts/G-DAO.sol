@@ -55,6 +55,9 @@ contract Elect is Ownable {
   /// @notice Time to stop a function
   uint256 Dead;
 
+  /// @notice A list of positions 
+  string[] Position;
+
   /// @notice A list of candidates for the election
   string[] public candidateList;
 
@@ -151,8 +154,7 @@ contract Elect is Ownable {
    * @notice Adds an array of Director to have access as a stakeholder
    * @param addresses The address to be given roles
    * @param accountTypes array of the account type
-   */
-   
+   */   
    function addStakeholders(address[] calldata addresses, string[] calldata accountTypes) external controlAccess {
      stakeholders = addresses;
      require(msg.sender == Chairman || owner() == _msgSender());
@@ -173,9 +175,29 @@ contract Elect is Ownable {
     }
   }
 
+  /**
+   * @notice Creates an array of position for the voting process
+   * @param _position The positions to be created
+   */
+  function createPosition(string[] memory _position) public controlAccess {
+    require(msg.sender == Chairman && electionPhase == 0);
+    Position = _position;
+  }
+
+  /**
+   * @notice Stakeholders declare interests for positions
+   * @param candidate The name of the candidate
+   * @param position The position the candidate is vying for
+   * @param link The ipfs link containing the image of the candidate
+   */
   function declareInterest(string memory candidate,string memory position, string memory link) public controlAccess
   {
-    require(Holders[msg.sender] == true && Interest[msg.sender] == false && electionPhase == 0);
+    require(Holders[msg.sender] == true && msg.sender != Chairman && Interest[msg.sender] == false && electionPhase == 0);
+
+    for(uint256 i =0; i < Position.length - 1; i++) {
+      position = Position[i];
+    }
+
     Interest[msg.sender] = true;
     uint256 Count=count + 1;
     count++;
@@ -187,11 +209,11 @@ contract Elect is Ownable {
   }
 
   /**
-   * @notice this function adds a candidate to the contract
+   * @notice this function deletes candidates that are unqualified
    * @notice it checks if the user is the Chairman
-   * @param candidate The name of the candidate
+   * @param candidate The id of the candidate
    */
-  function addCandidate(uint256 candidate)public controlAccess
+  function approveCandidate(uint256 candidate)public controlAccess
   {
     require(msg.sender==Chairman, "must be Chairman");
     require(electionPhase == 0);
@@ -271,15 +293,18 @@ contract Elect is Ownable {
   }
 
   function getElectionPhase() public view returns(uint256) {
+    // electionPhase is 0 before voting starts
+    // electionPhase is 1 when voting starts
+    // electionPhase is 2 when voting has been concluded
+    // electionPhase is 3 when results are published
     return electionPhase;
   }
 
 
-/// @notice from here on contains functions for the login at the front end
-
-   ///@notice Chairman login
+   /// @notice from here on contains functions for the login at the front end
   function login(address user)public view returns(string memory)
   {
+     ///@notice Chairman login
     if(user==Chairman)
     {
       return "Chairman";
