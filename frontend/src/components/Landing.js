@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import voteSign from '../voters.png'
+import voteSign from '../vote.png'
 import NavBar from './NavBar';
 
 
@@ -24,7 +24,7 @@ const Landing = ({handleSignIn, notice}) => {
 			</div>
 
 			<div>
-				<img src = "https://voting-dapp-frontend.vercel.app/_next/image?url=%2Fimages%2F1.png&w=1200&q=75" alt= "Voters" height= {500} width= {500} />
+				<img src = {voteSign} alt= "Voters" height= {500} width= {500} />
 			</div>
             
         </div>

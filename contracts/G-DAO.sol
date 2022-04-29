@@ -19,6 +19,9 @@ contract Elect is Ownable {
   /// @notice The number of votes received per candidate
   mapping (uint256 => uint256) private votesReceived;
 
+  /// @notice A record of accounts declaring interest
+  mapping(address => bool) Interest;
+
   /// @notice A record of accounts that have Voted
   mapping(address => bool) Voted;
 
@@ -40,6 +43,9 @@ contract Elect is Ownable {
   /// @notice Address of the Chairman of the organisation.
   address Chairman;
 
+  /// @notice A list of stakeholders addresses
+  address[] stakeholders;
+
   /// @notice The phase of election, initialised as 0
   uint8 private electionPhase = 0;
 
@@ -49,8 +55,15 @@ contract Elect is Ownable {
   /// @notice Time to stop a function
   uint256 Dead;
 
+  /// @notice A list of positions 
+  string[] Position;
+
   /// @notice A list of candidates for the election
   string[] public candidateList;
+
+  function getList() public view returns(string[] memory) {
+    return candidateList;
+  }
 
   /// @notice states the details of a candidate
   struct Candid
@@ -66,14 +79,12 @@ contract Elect is Ownable {
    * @dev the Candid parameter will be a struct representing a Contestant
    * @param candid candidate contesting
    * @param votes total number of votes
+   * @param date date election result
    */
-  event result(Candid candid, uint256 votes);
+  event result(Candid candid, uint256 votes, bytes32 date);
 
   /// @notice An event thats emitted to show the details of the candidates 
   event candidates(uint256 ID, string name, string position, string ipfs);
-
-  /// @notice An event thats emitted to declare the winner
-  event Winner(Candid winner, uint256 votes);
 
   /// @notice This checks that the address is a stakeholder
   modifier stakeholder {
@@ -110,28 +121,6 @@ contract Elect is Ownable {
     Dead = block.timestamp + 366 days;
   }
 
-   /// @notice this functions clears the contents of the previously performed election so it can be reused
-  function clearData()external 
-  {
-    require(msg.sender == Chairman,"no access");
-    require(electionPhase == 2,"voting must end first");
-    for(uint256 i = 1; i <= count; i++)
-    {
-      delete Candidate[i];
-      delete Contestant[i];
-      delete votesReceived[i];
-      delete Contestant[i];
-      delete candidateList[i];
-    }
-    count=0;
-
-    for (uint256 i=0; i<candidateList.length; i++)
-    {
-      delete candidateList[i];
-    }
-    
-  }
-
   /**
    * @notice function allows Chairman Start voting proccess
    */
@@ -166,36 +155,51 @@ contract Elect is Ownable {
    * @notice Adds an array of Director to have access as a stakeholder
    * @param addresses The address to be given roles
    * @param accountTypes array of the account type
-   */
-   function addStakeholders(address[] calldata addresses, string[] calldata accountTypes) external onlyOwner controlAccess {
-      require(addresses.length == accountTypes.length, "the roles and addresses provided differ");     
-      for (uint i = 0; i < addresses.length; i++) {
-          if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('student'))) {
-              Student[addresses[i]] = true;
-              Holders[addresses[i]] = true;
-          } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Teacher'))) {
-               Teacher[addresses[i]]=true;
-               Holders[addresses[i]] = true;
-          } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Director'))) {
-                 Teacher[addresses[i]]=true;
-                 Holders[addresses[i]] = true;
-          } else {
-              continue;
-          }
+   */   
+   function addStakeholders(address[] calldata addresses, string[] calldata accountTypes) external controlAccess {
+     stakeholders = addresses;
+     require(msg.sender == Chairman || owner() == _msgSender());
+     require(addresses.length == accountTypes.length, "the roles and addresses provided differ");     
+     for (uint i = 0; i < addresses.length; i++) {
+        if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Student'))) {
+          Student[addresses[i]] = true;
+          Holders[addresses[i]] = true;
+        } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Teacher'))) {
+          Teacher[addresses[i]]=true;
+          Holders[addresses[i]] = true;
+        } else if (keccak256(abi.encodePacked(accountTypes[i])) == keccak256(abi.encodePacked('Director'))) {
+          Director[addresses[i]]=true;
+          Holders[addresses[i]] = true;
+        } else {
+          continue;
       }
+    }
   }
 
   /**
-   * @notice this function adds a candidate to the contract
-   * @notice it checks if the user is the Chairman
+   * @notice Creates an array of position for the voting process
+   * @param _position The positions to be created
+   */
+  function createPosition(string[] memory _position) public controlAccess {
+    require(msg.sender == Chairman && electionPhase == 0);
+    Position = _position;
+  }
+
+  /**
+   * @notice Stakeholders declare interests for positions
    * @param candidate The name of the candidate
    * @param position The position the candidate is vying for
    * @param link The ipfs link containing the image of the candidate
    */
-  function addCandidate(address addr, string memory candidate,string memory position, string memory link)public controlAccess
+  function declareInterest(string memory candidate,string memory position, string memory link) public controlAccess
   {
-    require(msg.sender==Chairman, "must be Chairman");
-     require(Holders[addr]==true, "candidate not a stake holder");
+    require(Holders[msg.sender] == true && msg.sender != Chairman && Interest[msg.sender] == false && electionPhase == 0);
+
+    for(uint256 i =0; i < Position.length - 1; i++) {
+      position = Position[i];
+    }
+
+    Interest[msg.sender] = true;
     uint256 Count=count + 1;
     count++;
     candidateList.push(candidate);
@@ -203,6 +207,18 @@ contract Elect is Ownable {
     votesReceived[Count]=0;
     Contestant[Count]=Candid(Count, candidate, position, link );
     emit candidates(Count, candidate, position, link);
+  }
+
+  /**
+   * @notice this function deletes candidates that are unqualified
+   * @notice it checks if the user is the Chairman
+   * @param candidate The id of the candidate
+   */
+  function approveCandidate(uint256 candidate)public controlAccess
+  {
+    require(msg.sender==Chairman, "must be Chairman");
+    require(electionPhase == 0);
+    delete candidateList[candidate];
   }
 
 
@@ -224,7 +240,6 @@ contract Elect is Ownable {
     Voted[msg.sender]= true;
     return "Voted";
   }
-
 
   /**
    * @notice this function returns the number of votes of a candidate
@@ -266,28 +281,31 @@ contract Elect is Ownable {
   /**
    * @notice function allows Stakeholders except students to make result visible to all
    */
-  function publicResults()public controlAccess
+  function publicResults(bytes32 date)public controlAccess
   {
     require(Student[msg.sender] != true);
     require(electionPhase == 2,"voting has to end first");
     for(uint256 i=1; i<=count; i++)
     {
-      emit result (Contestant[i], votesReceived[i]);
+      emit result (Contestant[i], votesReceived[i], date);
     }
     electionPhase = 3;
 
   }
 
   function getElectionPhase() public view returns(uint256) {
+    // electionPhase is 0 before voting starts
+    // electionPhase is 1 when voting starts
+    // electionPhase is 2 when voting has been concluded
+    // electionPhase is 3 when results are published
     return electionPhase;
   }
 
 
-/// @notice from here on contains functions for the login at the front end
-
-   ///@notice Chairman login
+   /// @notice from here on contains functions for the login at the front end
   function login(address user)public view returns(string memory)
   {
+     ///@notice Chairman login
     if(user==Chairman)
     {
       return "Chairman";
@@ -313,5 +331,32 @@ contract Elect is Ownable {
   function contractstate()public view returns(bool)
   {
     return block.timestamp > Dead;
+  }
+
+   /// @notice this functions clears the contents of the previously performed election so it can be reused
+  function clearData()public
+  {
+    require(msg.sender == Chairman,"no access");
+
+    for(uint256 i = 1; i <= count; i++)
+    {
+      delete Candidate[i];
+      delete Contestant[i];
+      delete votesReceived[i];
+    }
+    count=0;
+    
+    for (uint256 i=0; i<candidateList.length; i++)
+    {
+      delete candidateList[i];
+    } 
+
+    for(uint256 i = 0; i<stakeholders.length;i++)
+    {
+      delete stakeholders[i];
+      Voted[stakeholders[i]] = false;
+    }  
+    Voted[Chairman] = false;   
+    electionPhase = 0;  
   }
 }

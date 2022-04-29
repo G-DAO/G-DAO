@@ -14,7 +14,7 @@ const NavBar = ({address, accountType, toggleHome, disconnectAccount, isLandingP
     return (
         <nav className ={isLandingPage ? "nav-bar-landing" : "nav-bar"}>
             <div className = "nav-bar-main">
-                <h1>G-DAO</h1>
+                <h1><a href= "https://docs.google.com/document/d/1RR7kwWIXY25usD3EvNXTioLv51Ja1C3CGtTvnodlFZk/edit?usp=sharing" target="blank" className="nab"> G-DAO </a></h1> 
                 {!isLandingPage && <div className= "nav-buttons">
                     <button className = {showingHome ? 'nav-select' : 'nav-unselect'} onClick = {() => setHomeToggle('home')}>
                         Home
