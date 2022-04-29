@@ -77,10 +77,11 @@ contract Elect is Ownable {
   /**
    * @notice An event thats emitted to show the result of the election
    * @dev the Candid parameter will be a struct representing a Contestant
-   * @param Candid candidate contesting
+   * @param candid candidate contesting
    * @param votes total number of votes
+   * @param date date election result
    */
-  event result(Candid Candid, uint256 votes);
+  event result(Candid candid, uint256 votes, bytes32 date);
 
   /// @notice An event thats emitted to show the details of the candidates 
   event candidates(uint256 ID, string name, string position, string ipfs);
@@ -280,13 +281,13 @@ contract Elect is Ownable {
   /**
    * @notice function allows Stakeholders except students to make result visible to all
    */
-  function publicResults()public controlAccess
+  function publicResults(bytes32 date)public controlAccess
   {
     require(Student[msg.sender] != true);
     require(electionPhase == 2,"voting has to end first");
     for(uint256 i=1; i<=count; i++)
     {
-      emit result (Contestant[i], votesReceived[i]);
+      emit result (Contestant[i], votesReceived[i], date);
     }
     electionPhase = 3;
 
