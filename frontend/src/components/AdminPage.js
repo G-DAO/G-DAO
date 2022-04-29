@@ -11,14 +11,18 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
     const [position, setPosition] = useState('')
     const [picture, setPicture] = useState(null)
     const [lastCandidateID, setLastCandidateID] = useState(candidates.length);
+    const [electionPhase, setElectionPhase] = useState(0)
+    const [posts_, setPosts_] = useState(posts)
 
     const [viewCandidates, setViewCandidates] = useState(false)
+    const [currentView, setCurrentView] = useState(contractLive ? 0 : 4)
     const [viewResults, setViewResults] = useState(false)
     const [file, setFile] = useState()
     const [accountType_, setAccountType_] = useState('')
     const create = ipfsClient.create;
 	const client = create(`https://ipfs.infura.io:5001/api/v0`);
     const fileReader = new FileReader();
+    const views = ['Whitelisting', `${electionPhase <= 5 ? 'View Candidates' : 'View Results'}`, 'Set Vote Time', 'Hand Over', 'Advanced'];
 
 
     const handleStartVote = () => {
@@ -103,13 +107,39 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
                 } else alert("The number of addresses you sent do not match the number of roles. Check your file and try again.")
 
             };
-
-
             fileReader.readAsText(file);
-        }
+        } 
+    }
 
-        
-        
+    const handleStartDeclaration = async () => {
+        if (electionPhase > 0) {
+            alert('You can not start Interest Declaration now. Election has gone beyond this phase');
+            return;
+        }
+        setElectionPhase(1);
+        console.log('Started Declare');
+    }
+
+    const handleEndDeclaration = async () => {
+        if (electionPhase > 1) {
+            alert('You can not start Interest Declaration now. Election has gone beyond this phase');
+            return;
+        }
+        if (electionPhase < 1) {
+            alert('You have not started interest declaration yet, so it can not be ended.');
+            return;
+        }
+        setElectionPhase(2);
+        console.log('Ended Declare');
+    }
+
+    const handleCreatePost = async () => {
+        if (electionPhase > 0) {
+            alert('You can not create a post after election period has been started. Election has gone beyond this phase');
+            return;
+        }
+        setPosts_([...posts_, position])
+        console.log('Post Created');
     }
 
     const handlePublishResults = async () => {
@@ -161,91 +191,155 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
 
     return (
         <>
-        {contractLive && (<>{votingOccuring && candidates.length !== 0 && <button onClick= {() => setViewCandidates(!viewCandidates)} 
-        className = "side-button"> {viewCandidates ? 'Back to Admin' : 'View Candidates'}</button>}</>)}
+        {/* {contractLive && (<>{votingOccuring && candidates.length !== 0 && <button onClick= {() => setViewCandidates(!viewCandidates)} 
+        className = "side-button"> {viewCandidates ? 'Back to Admin' : 'View Candidates'}</button>}</>)} */}
         <div className= "admin-page">
-            {!viewCandidates && <>
-            {contractLive && <>
-            <h3>Voting Adjustment</h3>
-            <div className= "start-and-end-vote">
-                <button className= "start-vote" onClick= {handleStartVote}>
-                    Start Vote
-                </button>
-                <button className= "end-vote" onClick= {handleEndVote}>
-                    End Vote
-                </button>
+            <div className= 'admin-sidebar'>
+                <div className="admin-menu">
+                    {views.map((view, idx) => {
+                        if (!contractLive && idx !== 4) return;
+                        return (
+                            <div key= {idx} className= {`admin-menu-item ${currentView === idx && 'item-select'}`} onClick= {() => setCurrentView(idx)}>
+                                {view}
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
-            <h3>{' '}</h3>
-            <hr/>
+            
+            {currentView === 2 &&
+            <div className= "admin-page-info">
+                <div className= "admin-page">
+                    <div className= "admin-page-info">
 
-            <h3>
-                Check Account Type
-            </h3>
-            <div className= "start-and-end-vote">
-                <input type= 'text' placeholder= 'Enter Address' value = {newAdmin} onChange= {(e) => setNewAdmin(e.target.value)} />
-                <button onClick = {getType}> Check</button>
-            </div>
-            <div className= "account-type" >{accountType_}</div>
-            <hr/>
+                        {electionPhase < 2 && <>
+                        <h3>Interest Declaration</h3>
+                        <div className= "start-and-end-vote">
+                            <button className= "start-vote" onClick= {handleStartDeclaration}>
+                                Start Interest Declaration
+                            </button>
+                            <button className= "end-vote" onClick= {handleEndDeclaration}>
+                                End Interest Declaration
+                            </button>
+                        </div></>}
 
-            {['Chairman'].includes(accountType) && <>
-            <h3>Add Candidate</h3>
-            <div className= "interest-form">
-                        <label htmlFor="candidateName">  Full Name </label>
-                        <input type= "text" placeholder= "Enter full name here" value= {candidateName} onChange= {(e)=> setCandidateName(e.target.value)} />
-
-                        <label htmlFor="position"> Position </label>
-                        <input type= "text" placeholder= "Enter position here" value= {position} onChange= {(e)=> setPosition(e.target.value)} />
-
-                        <label htmlFor="picture"> Photograph </label>
-                        <input type= "file" onChange= {(e)=> setPicture(e.target.files[0])} />
-
-                        {/* <input type="submit" placeholder= "Declare"/> */}
-                        <button onClick= {handleAddCandidate}>Submit</button>
+                        <h3>Voting Adjustment</h3>
+                        <div className= "start-and-end-vote">
+                            <button className= "start-vote" onClick= {handleStartVote}>
+                                Start Vote
+                            </button>
+                            <button className= "end-vote" onClick= {handleEndVote}>
+                                End Vote
+                            </button>
+                        </div>
+                        <h3>{' '}</h3>
+                        <hr/>
                     </div>
+                    
+
+                    <div className= "posts-view">
+                        <h3>
+                        Create New Post
+                        </h3>
+                        <div className= "start-and-end-vote">
+                            <input type= 'text' placeholder= 'Enter post title' value = {position} onChange= {(e) => setPosition(e.target.value)} />
+                            <button onClick = {handleCreatePost}> Create</button>
+                        </div>
+
+                        {posts.length > 0 ? <><h3>Posts Available</h3>
+                        <ul className= "post-list">
+                            {posts_.map((post, idx) => <li key= {idx} className= "post-list-item">{post}</li>)}
+                        </ul></> : <h3>No Post Created Yet for Election</h3>}
+                    </div>
+                    
+                </div>
+                {!votingOccuring && <button onClick= {handlePublishResults}> Publish Results</button>}
+            </div>}
+
+            {currentView === 1 &&
+                <div className= "admin-page-info">
+                <VotingPage posts= {posts} candidatesByPost= {candidates} isAdminView= {true} accountType = {accountType} isResultView= {electionPhase === 5}/>
+                </div>
+            }
+            
+            {currentView === 0 &&
+            <div className= "admin-page-info">
+
+                {['Chairman'].includes(accountType) && <>
+                <h3> WhiteList Addresses </h3>
+                <input type = "file" onChange = {(e) => setFile(e.target.files[0])} />
+                <button onClick = {(e) => handleAddStakeholders(e)}>Add Stakeholders</button>
                 <hr />
 
+                <h3>Add Candidate</h3>
+                <div className= "interest-form">
+                            <label htmlFor="candidateName">  Full Name </label>
+                            <input type= "text" placeholder= "Enter full name here" value= {candidateName} onChange= {(e)=> setCandidateName(e.target.value)} />
 
-            <h3> WhiteList Addresses </h3>
-            <input type = "file" onChange = {(e) => setFile(e.target.files[0])} />
-            <button onClick = {(e) => handleAddStakeholders(e)}>Add Stakeholders</button>
-            <hr />
-            </>}
-            </>}
+                            <label htmlFor="position"> Position </label>
+                            <input type= "text" placeholder= "Enter position here" value= {position} onChange= {(e)=> setPosition(e.target.value)} />
 
-            {!contractLive && <p>Contract is not enabled at the moment. Please enable contract first or contact Chairman</p>}
+                            <label htmlFor="picture"> Photograph </label>
+                            <input type= "file" onChange= {(e)=> setPicture(e.target.files[0])} />
+
+                            {/* <input type="submit" placeholder= "Declare"/> */}
+                            <button onClick= {handleAddCandidate}>Submit</button>
+                        </div>
+                    <hr />
+
+                
+                </>}
 
 
-            {['Chairman'].includes(accountType) && <>
-            <h3>Contract Availability</h3>
-            <div className= "start-and-end-vote">
-                <button className= "start-vote" onClick= {enableContract}>
-                    Enable Contract
-                </button>
-                <button className= "end-vote" onClick= {disableContract}>
-                    Disable Contract
-                </button>
-            </div>
-            <hr />
+                <h3>
+                    Check Account Type
+                </h3>
+                <div className= "start-and-end-vote">
+                    <input type= 'text' placeholder= 'Enter Address' value = {newAdmin} onChange= {(e) => setNewAdmin(e.target.value)} />
+                    <button onClick = {getType}> Check</button>
+                </div>
+                <div className= "account-type" >{accountType_}</div>
+                <hr/>
+                
+            </div>}
+            
 
-            <h3> Refresh Contract </h3>
-            <button onClick = {refreshContract}>Refresh Contract Data</button>
-            <hr />
 
-            <h3>
-                Change Chairman
-            </h3>
-            <div className= "start-and-end-vote">
-                <input type= 'text' placeholder= 'Enter Address' value = {newChairman} onChange= {(e) => setNewChairman(e.target.value)} />
-                <button onClick = {changeChairman}> Hand Over</button>
-            </div>
-            </>}
-            </>}
+            {currentView === 4 &&
+            <div className= "admin-page-info">
+                {!contractLive && <p>Contract is not enabled at the moment. Please enable contract first or contact Chairman</p>}
 
-            {viewCandidates && <VotingPage posts= {posts} candidatesByPost= {candidates} isAdminView= {true}/>}
-            {/* {viewResults && <VotingPage posts= {posts} candidatesByPost= {candidates} isResultView= {true} />} */}
+                <h3>Contract Availability</h3>
+                <div className= "start-and-end-vote">
+                    <button className= "start-vote" onClick= {enableContract}>
+                        Enable Contract
+                    </button>
+                    <button className= "end-vote" onClick= {disableContract}>
+                        Disable Contract
+                    </button>
+                </div>
+                <hr />
 
-            {!votingOccuring && <button onClick= {handlePublishResults}> Publish Results</button>}
+                <h3> Refresh Contract </h3>
+                <button onClick = {refreshContract}>Refresh Contract Data</button>
+                <hr />
+            </div>}
+            
+            {currentView === 3 &&
+            <div className= "admin-page-info">
+                <h3>
+                    Change Chairman
+                </h3>
+                <div className= "start-and-end-vote">
+                    <input type= 'text' placeholder= 'Enter Address' value = {newChairman} onChange= {(e) => setNewChairman(e.target.value)} />
+                    <button onClick = {changeChairman}> Hand Over</button>
+                </div>
+            </div>}
+            
+
+            
+
+            
             
         </div>
         </>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Candidate from './Candidate';
 
 
-const Voting = ({post, candidates, handleVote, isResultView, isAdminView, resultsCompiled}) => {
+const Voting = ({post, candidates, handleVote, isResultView, isAdminView, resultsCompiled, handleApproval, accountType}) => {
     const [showContestants, setShowContestants] = useState(true);
     const [hasVoted, setHasVoted] = useState(false);
     let maxVotes = candidates[0].votesCount;
@@ -33,7 +33,9 @@ const Voting = ({post, candidates, handleVote, isResultView, isAdminView, result
                     return (<div key = {index}>
                         < Candidate student = {candidate} handleVote = {checkVoted} number = {index + 1} votedforCategory= {hasVoted} isResultView= {isResultView} 
                         isWinner = {resultsCompiled && candidate.votesCount===maxVotes}
-                        isAdminView = {isAdminView} />
+                        isAdminView = {isAdminView}
+                        handleApproval = {handleApproval}
+                        accountType= {accountType} />
                     </div>)
                     
                 })}

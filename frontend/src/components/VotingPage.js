@@ -3,14 +3,20 @@ import Voting from './Voting';
 import ResultSummary from './ResultSummary';
 import AdminPage from './AdminPage';
 
-const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, resultsCompiled, contract, address}) => {
+const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, resultsCompiled, contract, address, accountType}) => {
     const [votes, setVotes] = useState([]);
+    const [toBeApproved, setToBeApproved] = useState([])
     const [noOfVotes, setNoOfVotes] = useState(0);
 
 
     const setVoters = (name, checker) => {
         checker ? setVotes([...votes, Number(name)]) : setVotes(votes.filter(t => t !== Number(name)));
         console.log(votes)
+    }
+
+    const setApprovedCandidates = (name, checker) => {
+        checker ? setToBeApproved([...toBeApproved, Number(name)]) : setVotes(toBeApproved.filter(t => t !== Number(name)));
+        console.log(toBeApproved)
     }
 
     const handleSubmitVotes = async () => {
@@ -31,10 +37,28 @@ const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, results
 		}
     }
 
+    const handleApproveCandidates = async () => {
+        if (votes.length < posts.length) {
+            alert('You have not voted all categories.')
+            return;
+        }
+        console.log(votes);
+
+        try {
+            await contract.methods.approveCandidates(toBeApproved).send({from : address})
+            alert('Votes Sent');
+            
+            setVotes([])
+        } 
+        catch (error) {
+			alert(error);
+		}
+    }
+
     useEffect(() => {
         if (isResultView) {
             let sum_ = candidatesByPost.reduce((acc, curr) => acc + curr.votesCount, 0);
-            setNoOfVotes(sum_);
+            setNoOfVotes(sum_/posts.length);
             
         }
     }, [candidatesByPost, isResultView])
@@ -58,12 +82,15 @@ const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, results
                 })
                 console.log(candidates)
                 return (
-                    < Voting post = {post} candidates = {candidates} handleVote = {setVoters} isResultView = {isResultView} isAdminView = {isAdminView} resultsCompiled= {resultsCompiled} />
+                    < Voting post = {post} candidates = {candidates} handleVote = {setVoters} isResultView = {isResultView} isAdminView = {isAdminView} resultsCompiled= {resultsCompiled}
+                    handleApproval= {setApprovedCandidates} accountType= {accountType} />
                 )
             })}
 
 
-            {!isAdminView && !isResultView && <button onClick= {handleSubmitVotes} className= "button-auth">Send Votes</button>}
+            
+            {!isResultView && (!isAdminView ? <button onClick= {handleSubmitVotes} className= "button-auth">Send Votes</button> : 
+            (accountType === 'Chairman' && <button onClick= {handleApproveCandidates} className= "button-auth">Approve</button>))}
         </div>
         </>
         
@@ -73,7 +100,8 @@ const VotingPage = ({posts, candidatesByPost, isResultView, isAdminView, results
 AdminPage.defaultProps = {
     isResultView: false,
     isAdminView: false,
-    resultsCompiled: true
+    resultsCompiled: true,
+    accountType: ''
 }
 
 export default VotingPage
