@@ -19,6 +19,9 @@ contract Elect is Ownable {
   /// @notice The number of votes received per candidate
   mapping (uint256 => uint256) private votesReceived;
 
+  /// @notice A record of accounts declaring interest
+  mapping(address => bool) Interest;
+
   /// @notice A record of accounts that have Voted
   mapping(address => bool) Voted;
 
@@ -54,6 +57,10 @@ contract Elect is Ownable {
 
   /// @notice A list of candidates for the election
   string[] public candidateList;
+
+  function getList() public view returns(string[] memory) {
+    return candidateList;
+  }
 
   /// @notice states the details of a candidate
   struct Candid
@@ -166,17 +173,10 @@ contract Elect is Ownable {
     }
   }
 
-  /**
-   * @notice this function adds a candidate to the contract
-   * @notice it checks if the user is the Chairman
-   * @param candidate The name of the candidate
-   * @param position The position the candidate is vying for
-   * @param link The ipfs link containing the image of the candidate
-   */
-  function addCandidate(string memory candidate,string memory position, string memory link)public controlAccess
+  function declareInterest(string memory candidate,string memory position, string memory link) public controlAccess
   {
-    require(msg.sender==Chairman, "must be Chairman");
-    require(electionPhase == 0);
+    require(Holders[msg.sender] == true && Interest[msg.sender] == false && electionPhase == 0);
+    Interest[msg.sender] = true;
     uint256 Count=count + 1;
     count++;
     candidateList.push(candidate);
@@ -184,6 +184,18 @@ contract Elect is Ownable {
     votesReceived[Count]=0;
     Contestant[Count]=Candid(Count, candidate, position, link );
     emit candidates(Count, candidate, position, link);
+  }
+
+  /**
+   * @notice this function adds a candidate to the contract
+   * @notice it checks if the user is the Chairman
+   * @param candidate The name of the candidate
+   */
+  function addCandidate(uint256 candidate)public controlAccess
+  {
+    require(msg.sender==Chairman, "must be Chairman");
+    require(electionPhase == 0);
+    delete candidateList[candidate];
   }
 
 
@@ -322,4 +334,3 @@ contract Elect is Ownable {
     electionPhase = 0;  
   }
 }
-
