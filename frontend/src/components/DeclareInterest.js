@@ -1,4 +1,4 @@
-import { FaSpinner, FaAngleDoubleDown, FaAngleDoubleUp } from 'react-icons/fa';
+import { FaAngleDoubleDown, FaAngleDoubleUp } from 'react-icons/fa';
 import { useState } from 'react';
 import * as ipfsClient from 'ipfs-http-client';
 

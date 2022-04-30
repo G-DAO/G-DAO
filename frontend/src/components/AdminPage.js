@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import * as ipfsClient from 'ipfs-http-client';
 import VotingPage from './VotingPage';
 
 
@@ -7,20 +6,14 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
 
     const [newAdmin, setNewAdmin] = useState('')
     const [newChairman, setNewChairman] = useState('')
-    const [candidateName, setCandidateName] = useState('')
     const [position, setPosition] = useState('')
-    const [picture, setPicture] = useState(null)
-    const [lastCandidateID, setLastCandidateID] = useState(candidates.length);
     const [electionPhase, setElectionPhase] = useState(electionPhase_)
     const [posts_, setPosts_] = useState(posts)
 
-    const [viewCandidates, setViewCandidates] = useState(false)
+    
     const [currentView, setCurrentView] = useState(contractLive ? 0 : 4)
-    const [viewResults, setViewResults] = useState(false)
     const [file, setFile] = useState()
     const [accountType_, setAccountType_] = useState('')
-    const create = ipfsClient.create;
-	const client = create(`https://ipfs.infura.io:5001/api/v0`);
     const fileReader = new FileReader();
     const views = ['Whitelisting', `${electionPhase < 5 ? 'View Candidates' : 'View Results'}`, 'Vote Administration', 'Hand Over', 'Advanced'];
 
@@ -29,38 +22,34 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         if (candidates.length === 0) {
             alert('Voting can not start without candidates')
         }
-        console.log('Started Voting season');
         startVote();
     }
 
     const handleEndVote = () => {
-        console.log('Ended Voting season');
         endVote();
     }
 
-    const handleAddAdmin = () => {
-        console.log(newAdmin);
-        setNewAdmin('');
-    }
 
     const changeChairman = async () => {
         try {
-            const res = await contract.methods.setChairman(newChairman).send({from: address})
+            await contract.methods.setChairman(newChairman).send({from: address})
             alert("Chairman changed. You would have to log in again")
             setPage('login')
         } 
         catch (error) {
-            alert(error);
+            const p = {error}
+			alert(p.error.message);
         }
     }
 
     const refreshContract = async () => {
         try {
-            const res = await contract.methods.clearData().send({from: address})
+            await contract.methods.clearData().send({from: address})
             alert("Contract Data refreshed")
         } 
         catch (error) {
-            alert(error);
+            const p = {error}
+			alert(p.error.message);
         } 
     }
 
@@ -71,7 +60,8 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
             setAccountType_(res);
         } 
         catch (error) {
-            alert(error);
+            const p = {error}
+			alert(p.error.message);
         } 
     }
 
@@ -82,15 +72,11 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         let res = [];
         let roles = [];
         if (file) {
-            console.log(file)
             fileReader.onload = async function (event) {
-                console.log(event)
                 const csvOutput = event.target.result;
-                console.log(csvOutput)
                 let lines = csvOutput.split('\n');
                 for (let i = 0; i < lines.length; i++) {
                     let p = lines[i].split(',');
-                    console.log(p)
                     if (p[0]) res.push(p[0]);
                     if (p[1]) roles.push(p[1].split('\r')[0]);
         
@@ -101,11 +87,11 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
                 if (res.length === roles.length && res.length > 0) {
                     try {
                         await contract.methods.addStakeholders(res, roles).send({from : address})
-                        alert('Added Stakeholders');	
-                        console.log('Added Candidate')
+                        alert('Added Stakeholders');
                     } 
                     catch (error) {
-                        alert(error);
+                        const p = {error}
+			            alert(p.error.message);
                     } 
                 } else alert("The number of addresses you sent do not match the number of roles. Check your file and try again.")
 
@@ -128,7 +114,6 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         catch (error) {
             const p = {error}
 			alert(p.error.message);
-            console.log(p.error.message);
 		} 
     }
 
@@ -145,12 +130,10 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         try {
             await contract.methods.endDeclaration().send({from : address})
             setElectionPhase(2);
-            console.log('Ended Declare');
         } 
         catch (error) {
             const p = {error}
 			alert(p.error.message);
-            console.log(p.error.message);
 		} 
         
     }
@@ -169,13 +152,11 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         try {
             await contract.methods.createPosition(p).send({from : address})
             alert('Posts Created');	
-            console.log('Added Posts')
             setPosts_(p)
         } 
         catch (error) {
             const p = {error}
 			alert(p.error.message);
-            console.log(p.error.message);
 		} 
     }
 
@@ -183,47 +164,12 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
         try {
             await contract.methods.publicResults().send({from : address})
             alert('Results set to Published');	
-            console.log('Added Candidate')
         } 
         catch (error) {
             const p = {error}
 			alert(p.error.message);
-            console.log(p.error.message);
 		} 
     }
-
-
-    const handleAddCandidate = async () => {
-        if (picture === null) {
-			alert('Please upload an image');
-        return;
-		}
-		try {
-            let id_ = lastCandidateID + 1;
-			const res = await client.add(picture, {
-				progress: (prog) => console.log(`received: ${prog}`)
-			});
-            await contract.methods.addCandidate(
-				candidateName,
-				position,
-				res.path,
-			).send({from : address})
-            alert('Candidate Added');	
-            console.log('Added Candidate')
-            sendCandidatesData(id_, candidateName, position, res.path);
-            setCandidateName('')
-            setPosition('')
-            setPicture(null)
-            setLastCandidateID(id_)
-        } 
-        catch (error) {
-			alert(error);
-		}
-        
-        
-    }
-
-    console.log({candidates, posts});
 
 
     return (
@@ -234,7 +180,7 @@ const AdminPage = ({contract, startVote, endVote, accountType, address, enableCo
             <div className= 'admin-sidebar'>
                 <div className="admin-menu">
                     {views.map((view, idx) => {
-                        if (accountType !== 'Chairman' && ![0, 1].includes(idx)) return;
+                        if (accountType !== 'Chairman' && ![0, 1].includes(idx)) return <></>;
                         return (
                             <div key= {idx} className= {`admin-menu-item ${currentView === idx && 'item-select'}`} onClick= {() => setCurrentView(idx)}>
                                 {view}

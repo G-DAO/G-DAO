@@ -1,5 +1,5 @@
-import { AiOutlineClose } from 'react-icons/ai';
-import { FaSpinner, FaAngleDoubleDown, FaAngleDoubleUp } from 'react-icons/fa';
+
+import { FaAngleDoubleDown, FaAngleDoubleUp } from 'react-icons/fa';
 import { useState } from 'react';
 import Candidate from './Candidate';
 
@@ -20,7 +20,7 @@ const Voting = ({post, candidates, handleVote, electionPhase, isAdminView, resul
         
     }
 
-    console.log(candidates.length)
+    
     return (
         <div className = "voting-bar">
             <div className= "voting-bar-header">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import voteSign from '../vote.png'
 import NavBar from './NavBar';
 

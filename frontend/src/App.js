@@ -34,7 +34,10 @@ function App() {
        from:selectedAccount
      }).then(() => { alert('Started voting session')
      setElectionPhase(1) 
-    }).catch((err) => {console.log(err) })
+    }).catch((error) => {
+      const p = {error}
+			alert(p.error.message);
+    })
   }
 
   const endVote = () => {
@@ -42,7 +45,10 @@ function App() {
       from:selectedAccount
     }).then(() => { alert('Ended voting session')
     setElectionPhase(2) 
-   }).catch((err) => {console.log(err) })
+   }).catch((error) => {
+    const p = {error}
+    alert(p.error.message);
+   })
  }
 
   const disableContract = () => {
@@ -50,7 +56,10 @@ function App() {
       from:selectedAccount
     }).then(() => { alert('Contract Disabled')
     setContractAvailability(false) 
-   }).catch((err) => {console.log(err) })
+   }).catch((error) => {
+    const p = {error}
+    alert(p.error.message);
+   })
   }
 
   const enableContract = () => {
@@ -58,12 +67,14 @@ function App() {
       from:selectedAccount
     }).then(() => { alert('Contract Enabled')
     setContractAvailability(true) 
-   }).catch((err) => {console.log(err) })
+   }).catch((error) => {
+    const p = {error}
+    alert(p.error.message);
+   })
   }
 
   const getElectionPhase = async (contract) => {
     let p = await contract.methods.getElectionPhase().call()
-    console.log(p)
     setElectionPhase(Number(p));
     
   }
@@ -99,7 +110,6 @@ function App() {
 
     let k = await contract.getPastEvents('candidates', {fromBlock: 0})
     let result_ = []
-    let res = []
     k.map((ele, id) => {
       let p = {}
       p.ID = ele.returnValues.ID
@@ -109,11 +119,12 @@ function App() {
       p.votesCount = 0
 
       result_.push(p)
+
+      return 0;
       
     })
 
     setCandidates(result_)
-    console.log(result_)
 
   }
 
@@ -130,11 +141,12 @@ function App() {
       p.position = ele.returnValues.position
       p.votesCount = 0
       result_.push(p)
+
+      return 0;
       
     })
 
     setCandidates(result_)
-    console.log(result_)
 
   }
 
@@ -153,11 +165,12 @@ function App() {
       p.votesCount = Number(ele.returnValues.votes)
 
       result_.push(p)
+
+      return 0;
       
     })
 
     setCandidates(result_)
-    console.log(result_)
 
   }
 
@@ -174,7 +187,6 @@ function App() {
 
   const handleSignIn = async (contract_) => {
     let provider = window.ethereum;
-    console.log(contract_);
     setLoaded(true)
   
     if (typeof provider !== 'undefined') {
@@ -201,8 +213,9 @@ function App() {
           checkIfVoted(contract_, accounts[0]).then(p => setUserHasVoted(p));
 
         })
-        .catch((err) => {
-          console.log(err);
+        .catch((error) => {
+          const p = {error}
+			    alert(p.error.message);
           setCurrentPage('login')
           setLoaded(false)
           return;
@@ -250,7 +263,6 @@ function App() {
     handleSignIn(contract_).then((tx) => console.log(tx))
 
     handleContractAvailability(contract_).then(p => {
-      console.log(p)
       setContractAvailability(p)});
     
     getPosts(contract_).then(p => setPosts(p));
@@ -263,7 +275,7 @@ function App() {
 
     getElectionPhase(contract_)
 
-  }, [])
+  }, [electionPhase])
 
   useEffect(() => {
 
@@ -317,7 +329,7 @@ function App() {
         { contractAvailability ? <>
           <h3>Welcome, {accountType}</h3>
         <hr/>
-        {currentPage === 'home' && (electionPhase === 3 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} address= {selectedAccount} electionPhase= {electionPhase} /> :
+        {currentPage === 'home' && (electionPhase === 3 ? (!userHasVoted ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} address= {selectedAccount} electionPhase= {electionPhase} /> : <p>You have already voted for this election cycle. Thank you.</p>) :
         electionPhase === 1 ? (accountType === 'Student' ? <DeclareInterest posts = {posts} hasDeclared = {userHasDeclared} contract= {contract} address= {selectedAccount} /> : <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
         <p> Declaration of Interests is ongoing at the moment</p>
         <p> {'   '}</p>

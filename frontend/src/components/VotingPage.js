@@ -8,7 +8,7 @@ const VotingPage = ({posts, candidatesByPost, electionPhase, isAdminView, result
     const [toBeApproved, setToBeApproved] = useState([])
     const [noOfVotes, setNoOfVotes] = useState(0);
 
-    console.log(contract);
+    
     const setVoters = (name, checker) => {
         checker ? setVotes([...votes, Number(name)]) : setVotes(votes.filter(t => t !== Number(name)));
         console.log(votes)
@@ -20,10 +20,10 @@ const VotingPage = ({posts, candidatesByPost, electionPhase, isAdminView, result
     }
 
     const handleSubmitVotes = async () => {
-        // if (votes.length < posts.length) {
-        //     alert('You have not voted all categories.')
-        //     return;
-        // }
+        if (votes.length < posts.length) {
+            alert('You have not voted all categories.')
+            return;
+        }
         console.log(votes);
 
         try {
@@ -33,25 +33,26 @@ const VotingPage = ({posts, candidatesByPost, electionPhase, isAdminView, result
             setVotes([])
         } 
         catch (error) {
-			alert(error);
+			const p = {error}
+			alert(p.error.message);
 		}
     }
 
     const handleApproveCandidates = async () => {
-        // if (votes.length < posts.length) {
-        //     alert('You have not voted approved in all categories.')
-        //     return;
-        // }
-        console.log(contract);
+        if (votes.length < posts.length) {
+            alert('You have not voted approved in all categories.')
+            return;
+        }
 
         try {
             await contract.methods.approveCandidates(toBeApproved).send({from : address})
-            alert('Votes Sent');
+            alert('Candidates Approved');
             
             setVotes([])
         } 
         catch (error) {
-			alert(error);
+			const p = {error}
+			alert(p.error.message);
 		}
     }
 
@@ -80,7 +81,6 @@ const VotingPage = ({posts, candidatesByPost, electionPhase, isAdminView, result
                     if(electionPhase === 5) return b.votesCount - a.votesCount;
                     return 0;
                 })
-                console.log(candidates)
                 return (
                     < Voting post = {post} candidates = {candidates} handleVote = {setVoters} electionPhase = {electionPhase} isAdminView = {isAdminView} resultsCompiled= {resultsCompiled}
                     handleApproval= {setApprovedCandidates} accountType= {accountType} />

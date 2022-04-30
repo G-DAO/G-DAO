@@ -15,8 +15,6 @@ const Candidate = ({student, handleVote, votedforCategory, electionPhase, isWinn
         setApproved(!approved);
     }
 
-    console.log(electionPhase, isAdminView)
-
     return (
         <div className= "candidate-pane">
             <h2>Candidate {number}</h2>
