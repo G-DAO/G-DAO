@@ -162,9 +162,12 @@ contract Elect is Ownable {
    * @notice Set Chairman for the electoral process by the owner only
    * @param _chairman The address of the Chairman
    */
-  function setChairman(address _chairman) public onlyOwner {
+  function setChairman(address _chairman) public {
+    require(msg.sender == Chairman, "You are not the chairman");
     Chairman = _chairman;
     Holders[_chairman]=true;
+    Director[msg.sender] = true;
+    
   }
   
   /**

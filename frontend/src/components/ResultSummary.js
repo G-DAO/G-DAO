@@ -23,4 +23,5 @@ const ResultSummary = ({amountOfVotes, numOfPosts, candidPerPost}) => {
     )
 }
 
+
 export default ResultSummary;

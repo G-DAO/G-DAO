@@ -29,7 +29,7 @@ const DeclareInterest = ({posts, hasDeclared, contract, address}) => {
 			});
             await contract.methods.declareInterest(
 				candidateName,
-				posts.indexOf(currentSelection),
+				posts.indexOf(currentSelection) + 1,
 				res.path,
 			).send({from : address})
             alert('Interest Declared');
