@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const Candidate = ({student, handleVote, votedforCategory, isResultView, isWinner, isAdminView, handleApproval, accountType}) => {
+const Candidate = ({student, handleVote, votedforCategory, electionPhase, isWinner, isAdminView, handleApproval, accountType, number}) => {
     const [isVoted, setIsVoted] = useState(false);
     const [approved, setApproved] = useState(false);
 
@@ -15,9 +15,11 @@ const Candidate = ({student, handleVote, votedforCategory, isResultView, isWinne
         setApproved(!approved);
     }
 
+    console.log(electionPhase, isAdminView)
+
     return (
         <div className= "candidate-pane">
-            <h2>Candidate {student.ID}</h2>
+            <h2>Candidate {number}</h2>
             <div className= "candidate-img">
                 <img src= {`https://ipfs.infura.io/ipfs/${student.CID}`} alt= {student.name}>
                 </img>
@@ -26,9 +28,9 @@ const Candidate = ({student, handleVote, votedforCategory, isResultView, isWinne
 
             <h3>{student.name}</h3>
             {/* <p>{student.watchword}</p> */}
-            {!isResultView && (!isAdminView ? <button onClick= {setVote}> {isVoted ? 'Unvote' : 'Vote'} </button> : 
-            (accountType === 'Chairman' && <button onClick= {setApproval}> {approved ? 'Unselect' : 'Select'} </button>))}
-            {isResultView && 
+            {electionPhase < 4 && (!isAdminView ? (electionPhase === 3 && <button onClick= {setVote}> {isVoted ? 'Unvote' : 'Vote'} </button>) : 
+            (accountType === 'Chairman' && electionPhase === 2 && <button onClick= {setApproval}> {approved ? 'Unselect' : 'Select'} </button>))}
+            {electionPhase === 5 && 
             <>
             <p>Votes Count: {student.votesCount}</p>
             {isWinner && <h3 style={{color: 'red'}}>Winner!!!</h3>}
@@ -39,7 +41,6 @@ const Candidate = ({student, handleVote, votedforCategory, isResultView, isWinne
 }
 
 Candidate.defaultProps = {
-    isResultView: false,
     isAdminView: false,
     isWinner: false,
     votesCount: 0

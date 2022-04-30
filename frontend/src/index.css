@@ -140,7 +140,7 @@ footer a {
   padding: 1rem;
   margin: 2rem auto;
   border-radius: 5px;
-  color: white;
+  color: midnightblue;
   box-shadow: drop-shadow(0 10px 10px rgba(15, 14, 14, 0.07))
 }
 
@@ -292,7 +292,17 @@ footer a {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  width: 85%;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.admin-set-vote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 60%;
   height: 100vh;
   overflow-y: auto;
 }

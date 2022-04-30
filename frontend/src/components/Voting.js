@@ -4,10 +4,10 @@ import { useState } from 'react';
 import Candidate from './Candidate';
 
 
-const Voting = ({post, candidates, handleVote, isResultView, isAdminView, resultsCompiled, handleApproval, accountType}) => {
+const Voting = ({post, candidates, handleVote, electionPhase, isAdminView, resultsCompiled, handleApproval, accountType}) => {
     const [showContestants, setShowContestants] = useState(true);
     const [hasVoted, setHasVoted] = useState(false);
-    let maxVotes = candidates[0].votesCount;
+    let maxVotes = electionPhase === 5 && candidates[0].votesCount;
 
     // check that category has been voted for
     const checkVoted = (name, checker) => {
@@ -20,7 +20,7 @@ const Voting = ({post, candidates, handleVote, isResultView, isAdminView, result
         
     }
 
-    console.log(candidates)
+    console.log(candidates.length)
     return (
         <div className = "voting-bar">
             <div className= "voting-bar-header">
@@ -28,10 +28,10 @@ const Voting = ({post, candidates, handleVote, isResultView, isAdminView, result
                 {showContestants ? < FaAngleDoubleUp onClick= {() => setShowContestants(false)} />
                 : < FaAngleDoubleDown onClick= {() => setShowContestants(true)} />}
             </div>
-            {showContestants && <div className= "candidate-view">
+            {showContestants && (candidates.length > 0 ? <div className= "candidate-view">
                 {candidates.map((candidate, index) => {
                     return (<div key = {index}>
-                        < Candidate student = {candidate} handleVote = {checkVoted} number = {index + 1} votedforCategory= {hasVoted} isResultView= {isResultView} 
+                        < Candidate student = {candidate} handleVote = {checkVoted} number = {index + 1} votedforCategory= {hasVoted} electionPhase= {electionPhase} 
                         isWinner = {resultsCompiled && candidate.votesCount===maxVotes}
                         isAdminView = {isAdminView}
                         handleApproval = {handleApproval}
@@ -39,7 +39,7 @@ const Voting = ({post, candidates, handleVote, isResultView, isAdminView, result
                     </div>)
                     
                 })}
-            </div>}
+            </div> : <p>No Candidate available for this post</p>)}
             
 
         </div>

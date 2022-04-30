@@ -8,6 +8,9 @@ import Web3 from 'web3/dist/web3.min.js';
 import { CONTRACT_ABI } from './constants';
 import { contactAddress } from './contractAddress';
 import Footer from './components/Footer';
+import DeclareInterest from './components/DeclareInterest';
+
+
 
 function App() {
   const [electionPhase, setElectionPhase] = useState(2);
@@ -20,12 +23,11 @@ function App() {
   const [selectedAccount, setSelectedAccount] = useState('')
   const [candidates, setCandidates] = useState([])
   const [posts, setPosts] = useState([])
+  const [userHasDeclared, setUserHasDeclared] = useState(false)
+  const [userHasVoted, setUserHasVoted] = useState(false)
 
-  const student = {
-    name: "Ebube Ebube",
-    CID: "QmaXjpTENetYrqHicuyNweCgVdLHuEqLQ3PrwQ4MAMc1SS",
-    watchword: "I believe I will make G-DAO great."
-  }
+  
+
 
   const startVote = () => {
      contract.methods.beginVote().send({
@@ -77,6 +79,22 @@ function App() {
     return p;
   }
 
+  const getPosts = async (contract_) => {
+    let p = await contract_.methods.getAvailablePosts().call();
+    console.log(p)
+    return p;
+  }
+
+  const checkIfVoted = async (contract_, address) => {
+    let p = await contract_.methods.hasVoted(address).call();
+    return p;
+  }
+
+  const checkIfDeclared = async (contract_, address) => {
+    let p = await contract_.methods.hasDeclared(address).call();
+    return p;
+  }
+
   const handleGetCandidates = async (contract) => {
 
     let k = await contract.getPastEvents('candidates', {fromBlock: 0})
@@ -88,16 +106,32 @@ function App() {
       p.name = ele.returnValues.name
       p.CID = ele.returnValues.ipfs
       p.position = ele.returnValues.position
-
-      if (!res.includes(ele.returnValues.position)) {
-        res.push(ele.returnValues.position)
-      }
+      p.votesCount = 0
 
       result_.push(p)
       
     })
 
-    setPosts(res);
+    setCandidates(result_)
+    console.log(result_)
+
+  }
+
+  const handleGetApprovedCandidates = async (contract) => {
+
+    let k = await contract.getPastEvents('Approved', {fromBlock: 0})
+    let result_ = []
+    let res = []
+    k.map((ele, id) => {
+      let p = {}
+      p.ID = ele.returnValues.ID
+      p.name = ele.returnValues.name
+      p.CID = ele.returnValues.ipfs
+      p.position = ele.returnValues.position
+      p.votesCount = 0
+      result_.push(p)
+      
+    })
 
     setCandidates(result_)
     console.log(result_)
@@ -162,6 +196,9 @@ function App() {
             setCurrentPage('home')
             setLoaded(false)
           })
+          checkIfDeclared(contract_, accounts[0]).then(p => setUserHasDeclared(p));
+
+          checkIfVoted(contract_, accounts[0]).then(p => setUserHasVoted(p));
 
         })
         .catch((err) => {
@@ -175,13 +212,17 @@ function App() {
         setLoaded(true)
         setSelectedAccount(accounts[0]);
         getAccountType(contract_, accounts[0]).then(p => {
-          if (!['Student', 'Chairman', 'teacher'].includes(p)) {
+          if (!['Student', 'Chairman', 'Teacher', 'Director'].includes(p)) {
             alert('You tried signing in with an unauthorized account. Contact the Chairman or any of the teachers')
             setCurrentPage('login')
             return
           }
           setAccountType(p)
           setCurrentPage('home')
+
+          checkIfDeclared(contract_, accounts[0]).then(p => setUserHasDeclared(p));
+
+          checkIfVoted(contract_, accounts[0]).then(p => setUserHasVoted(p));
         })
         console.log(`Selected account changed to ${selectedAccount}`)
         setTimeout(() => setLoaded(false), 1000)
@@ -212,22 +253,25 @@ function App() {
       console.log(p)
       setContractAvailability(p)});
     
-
+    getPosts(contract_).then(p => setPosts(p));
     
-    if (electionPhase !== 3) {
+    if (electionPhase < 3) {
       handleGetCandidates(contract_)
+    } else if (electionPhase < 5) {
+      handleGetApprovedCandidates(contract_)
     }
 
+    getElectionPhase(contract_)
 
   }, [])
 
   useEffect(() => {
 
-    if (electionPhase === 3) {
+    if (electionPhase === 5) {
       handleGetResults(contract)
     }
 
-    getElectionPhase(contract)
+    
 
   }, [electionPhase, contract])
 
@@ -273,17 +317,27 @@ function App() {
         { contractAvailability ? <>
           <h3>Welcome, {accountType}</h3>
         <hr/>
-        {currentPage === 'home' && (electionPhase === 1 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} address= {selectedAccount} /> :
-        (electionPhase === 3 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} isResultView = {true} resultsCompiled = {true}/> : 
+        {currentPage === 'home' && (electionPhase === 3 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} address= {selectedAccount} electionPhase= {electionPhase} /> :
+        electionPhase === 1 ? (accountType === 'Student' ? <DeclareInterest posts = {posts} hasDeclared = {userHasDeclared} contract= {contract} address= {selectedAccount} /> : <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+        <p> Declaration of Interests is ongoing at the moment</p>
+        <p> {'   '}</p>
+        <p> After declaration ends, voting can start on this page.</p>
+        </div>) :
+        electionPhase === 2 ? <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+        <p> {accountType === 'Chairman' ? 'You have ended Interest Declaration' : 'Declaration of Interests has ended at the moment'}</p>
+        <p> {'   '}</p>
+        <p> {accountType === 'Chairman' ? 'Start Vote from Admin Page next' : 'Voting will be commenced next. If you think this is wrong, contact the Chairman.'}</p>
+        </div> :
+        (electionPhase === 5 ? <VotingPage posts = {posts} candidatesByPost = {candidates} contract = {contract} resultsCompiled = {true} electionPhase= {electionPhase}/> : 
         <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-          {electionPhase === 2 ? <p> Voting session has been concluded</p> : <p> {accountType === 'Chairman' ? 'You have not set voting to commence' : 'Voting has not commenced'}</p>}
+          {electionPhase === 4 ? <p> Voting session has been concluded</p> : <p> {accountType === 'Chairman' ? 'You have not commenced a new election cycle' : 'Election cycle has not commenced'}</p>}
           <p> {'   '}</p>
-          {electionPhase === 2 ? <p> Come back later to view results after the have been published</p> : <p> {accountType === 'Chairman' ? 'Start Vote from Admin Page' : 'You will be notified when it commences'}</p>}
+          {electionPhase === 4 ? <p> Come back later to view results after they have been published</p> : <p> {accountType === 'Chairman' ? 'Create Posts and Commence cycle by starting Interest Declaration' : 'You will be notified when it commences'}</p>}
           </div>))}
           </> : (currentPage !== 'admin' && fallback)}
 
         {currentPage === 'admin' && <AdminPage startVote = {startVote} endVote = {endVote} accountType = {accountType} address = {selectedAccount}
-        contract= {contract} enableContract= {enableContract} disableContract= {disableContract} contractLive = {contractAvailability} votingOccuring= {electionPhase < 2}
+        contract= {contract} enableContract= {enableContract} disableContract= {disableContract} contractLive = {contractAvailability} electionPhase_= {electionPhase}
         candidates= {candidates} posts = {posts} sendCandidatesData= {updateCandidates} setPage = {(page) => setCurrentPage(page)}/>}
       </div>
       < Footer />

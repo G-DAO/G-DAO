@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -11,6 +11,7 @@ contract Elect is Ownable {
   constructor() {
     Holders[msg.sender] = true;
     Dead = block.timestamp;
+    Chairman = msg.sender;
   }
     
   /// @notice A record for validity of candidate
@@ -86,6 +87,8 @@ contract Elect is Ownable {
   /// @notice An event thats emitted to show the details of the candidates 
   event candidates(uint256 ID, string name, string position, string ipfs);
 
+  event Approved(uint256 ID, string name, string position, string ipfs);
+
   /// @notice This checks that the address is a stakeholder
   modifier stakeholder {
     require(Holders[msg.sender] == true, "You are not a stakeholder");
@@ -95,7 +98,7 @@ contract Elect is Ownable {
   /// @notice Modifier to Start the voting process
   modifier startvoting
   {
-    require(electionPhase == 1,"Its not yet time to vote");
+    require(electionPhase == 3,"Its not yet time to vote");
     _;
   }
 
@@ -126,8 +129,9 @@ contract Elect is Ownable {
    */
   function beginVote()public controlAccess
   {
+    require(electionPhase == 2, "Not yet time");
     require(msg.sender== Chairman,"you're not the Chairman");
-    electionPhase = 1;
+    electionPhase = 3;
   }
 
   /**
@@ -135,7 +139,21 @@ contract Elect is Ownable {
    */
   function endVote()public controlAccess
   {
-    require(electionPhase == 1, "You must first begin vote");
+    require(electionPhase == 3, "You must first begin vote");
+    require(msg.sender==Chairman,"you're not the Chairman ");
+    electionPhase = 4;
+  }
+
+  function startDeclaration() public controlAccess
+  {
+    require(electionPhase == 0, "Can not commence declaration at this phase");
+    require(msg.sender==Chairman,"you're not the Chairman ");
+    electionPhase = 1;
+  }
+
+  function endDeclaration() public controlAccess
+  {
+    require(electionPhase == 1, "Can not end declaration at this phase. Ensure declaration is commenced first, or that election has not exceeded this phase");
     require(msg.sender==Chairman,"you're not the Chairman ");
     electionPhase = 2;
   }
@@ -191,13 +209,12 @@ contract Elect is Ownable {
    * @param position The position the candidate is vying for
    * @param link The ipfs link containing the image of the candidate
    */
-  function declareInterest(string memory candidate,string memory position, string memory link) public controlAccess
+  function declareInterest(string memory candidate,uint position, string memory link) public controlAccess
   {
-    require(Holders[msg.sender] == true && msg.sender != Chairman && Interest[msg.sender] == false && electionPhase == 0);
+    require(Holders[msg.sender] == true && msg.sender != Chairman && Interest[msg.sender] == false && electionPhase == 1);
 
-    for(uint256 i =0; i < Position.length - 1; i++) {
-      position = Position[i];
-    }
+    require(position <= Position.length && position > 0, "You have sent in an inexistent post");
+    
 
     Interest[msg.sender] = true;
     uint256 Count=count + 1;
@@ -205,8 +222,8 @@ contract Elect is Ownable {
     candidateList.push(candidate);
     Candidate[Count]=true;
     votesReceived[Count]=0;
-    Contestant[Count]=Candid(Count, candidate, position, link );
-    emit candidates(Count, candidate, position, link);
+    Contestant[Count]=Candid(Count, candidate, Position[position - 1], link );
+    emit candidates(Count, candidate, Position[position - 1], link);
   }
 
   /**
@@ -214,11 +231,14 @@ contract Elect is Ownable {
    * @notice it checks if the user is the Chairman
    * @param candidate The id of the candidate
    */
-  function approveCandidate(uint256 candidate)public controlAccess
+  function approveCandidates(uint256[] calldata candidate)public controlAccess
   {
     require(msg.sender==Chairman, "must be Chairman");
-    require(electionPhase == 0);
-    delete candidateList[candidate];
+    require(electionPhase == 2);
+    for (uint i = 0; i < candidate.length; i++) {
+      emit Approved(Contestant[i + 1].ID, Contestant[i + 1].name, Contestant[i + 1].position, Contestant[i + 1].ipfs);
+    }
+    
   }
 
 
@@ -299,6 +319,18 @@ contract Elect is Ownable {
     // electionPhase is 2 when voting has been concluded
     // electionPhase is 3 when results are published
     return electionPhase;
+  }
+
+  function hasDeclared(address user) public view returns(bool) {
+    return Interest[user];
+  }
+
+  function hasVoted(address user) public view returns(bool) {
+    return Voted[user];
+  }
+
+  function getAvailablePosts() public view returns(string[] memory) {
+    return Position;
   }
 
 

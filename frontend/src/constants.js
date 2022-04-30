@@ -41,6 +41,37 @@ export const CONTRACT_ABI = [
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "ID",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "position",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "ipfs",
+        "type": "string"
+      }
+    ],
+    "name": "Approved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -54,47 +85,6 @@ export const CONTRACT_ABI = [
       }
     ],
     "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "ID",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "position",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "ipfs",
-            "type": "string"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct Elect.candid",
-        "name": "winner",
-        "type": "tuple"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "votes",
-        "type": "uint256"
-      }
-    ],
-    "name": "Winner",
     "type": "event"
   },
   {
@@ -155,8 +145,8 @@ export const CONTRACT_ABI = [
           }
         ],
         "indexed": false,
-        "internalType": "struct Elect.candid",
-        "name": "Candid",
+        "internalType": "struct Elect.Candid",
+        "name": "candid",
         "type": "tuple"
       },
       {
@@ -164,33 +154,16 @@ export const CONTRACT_ABI = [
         "internalType": "uint256",
         "name": "votes",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "date",
+        "type": "bytes32"
       }
     ],
     "name": "result",
     "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "candidate",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "position",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "link",
-        "type": "string"
-      }
-    ],
-    "name": "addCandidate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
   },
   {
     "inputs": [
@@ -206,6 +179,19 @@ export const CONTRACT_ABI = [
       }
     ],
     "name": "addStakeholders",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "candidate",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "approveCandidates",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -295,6 +281,42 @@ export const CONTRACT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "_position",
+        "type": "string[]"
+      }
+    ],
+    "name": "createPosition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "candidate",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "position",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "link",
+        "type": "string"
+      }
+    ],
+    "name": "declareInterest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "disable",
     "outputs": [],
@@ -310,9 +332,29 @@ export const CONTRACT_ABI = [
   },
   {
     "inputs": [],
+    "name": "endDeclaration",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "endVote",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAvailablePosts",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -323,6 +365,57 @@ export const CONTRACT_ABI = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getList",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "hasDeclared",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "hasVoted",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -361,7 +454,13 @@ export const CONTRACT_ABI = [
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "date",
+        "type": "bytes32"
+      }
+    ],
     "name": "publicResults",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -383,6 +482,13 @@ export const CONTRACT_ABI = [
       }
     ],
     "name": "setChairman",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "startDeclaration",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -420,4 +526,3 @@ export const CONTRACT_ABI = [
     "type": "function"
   }
 ]
-
